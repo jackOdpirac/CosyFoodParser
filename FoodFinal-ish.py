@@ -1,13 +1,6 @@
-
-# coding: utf-8
-
-# In[5]:
-
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import datetime
-#from datetime import datetime, date, time, timedelta
 import re
 import urllib
 from urllib.request import urlopen
@@ -15,467 +8,333 @@ from time import sleep
 import time
 from tika import parser
 
-
-# In[6]:
-
-
-# Date formatting
-all_months = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "avg", "sep", "okt", "nov", "dec"]
-#today = datetime.today()
-
-# Get date
-work_day = datetime.date.today().weekday() + 1
-if work_day > 5:
-    work_day = 1
-year = datetime.date.today().year
-month = datetime.date.today().month
-day = datetime.date.today().day
-
-print(work_day, day, month, year)
-
-# Generate the right day format for each website 
-stud_preh_date = str("{:02d}".format(day))+" "+all_months[(month)-1]
-marjetka_date = str(day)+"."+str(month)+"."+str(year)
-viabona_date = marjetka_date
-barjan_date = str(day)+"."+str(month)
-loncek_kuhaj_date = work_day - 1
-kondor_date = work_day
-josko_date = get_ijs_date(datetime.date.today().weekday() + 1)
-
-
-# In[7]:
-
-
-browser = webdriver.Chrome()
-
-
-# In[12]:
-
-
-date    = '29 jul'
-ddv_menu = dijaski_dom_vic(date)
-print(ddv_menu)
-
-date = "29.7.2019"
-marjetica_menu = marjetica_tobacna(date)
-print(marjetica_menu)
-
-date = "29.7.2019"
-via_bona_menu = via_bona(date)
-print(via_bona_menu)
-
-date = "26.7."
-barjan_menu = barjan(date)
-print(barjan_menu)
-
-date = 0
-loncek_kuhaj_menu = loncek_kuhaj(date)
-print(loncek_kuhaj_menu)
-
-date = '29 jul'
-fe_menza_menu = delicije_fe(date)
-print(fe_menza_menu)
-
-date = '29 jul'
-kurji_tat_menu = kurji_tat(date)
-print(kurji_tat_menu)
-
-date = '29 jul'
-interspar_vic_menu = interspar_vic(date)
-print(interspar_vic_menu)
-
-date = 0
-kondor_menu = kondor(date)
-print(kondor_menu)
-
-#date = "29072019"
-#day_of_week = 0
-#ijs_menu = marende_dulcis_ijs(date, day_of_week)
-#print(ijs_menu)
-
-
-# In[ ]:
-
-
-browser.close()
-
-
-# In[8]:
-
-
-
 """Get food for Dijaski Dom Vic
 """
 def dijaski_dom_vic(date):
- 
- #date    = '29 jul'
- 
- webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/1485'#1314'
+    webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/1485'#1314'
 
- # Open desired site with the date
- stud_preh_target_page(browser, webpage, date)
- # Get raw food menus
- raw_menu = stud_preh_get_raw_menus()
- #print(raw_menu)
+    # Open desired site with the date
+    stud_preh_target_page(browser, webpage, date)
+    # Get raw food menus
+    raw_menu = stud_preh_get_raw_menus()
 
- # Get a total number of all menus
- num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
- # Parse menus into nicer format
- parsed_menu = stud_preh_parsed_menus(num_of_all_menus)
+    # Get a total number of all menus
+    num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
+    # Parse menus into nicer format
+    parsed_menu = stud_preh_parsed_menus(num_of_all_menus)
 
- return(parsed_menu)
+    return(parsed_menu)
 
 
 """Get food for Marjetica
 """
 def marjetica_tobacna(date):
+    webpage = browser.get('http://marjetice.si/')
 
- #date = "29.7.2019"
- 
- webpage = browser.get('http://marjetice.si/')
+    # Get and parse menus into nicer format
+    raw_menus = browser.find_element_by_xpath("/html/body/div/div[3]/div[1]/div[1]/div/div/div[2]/div/div").text
 
- # Get and parse menus into nicer format
- raw_menus = browser.find_element_by_xpath("/html/body/div/div[3]/div[1]/div[1]/div/div/div[2]/div/div").text
+    # First repair any inconsistencies 
+    raw_menus.replace("\n  ", "\n\n\n")
 
- # First repair any inconsistencies 
- raw_menus.replace("\n  ", "\n\n\n")
+    # Find start date
+    start = raw_menus.find(date)
+    # Find first line
+    next_line_start = raw_menus.find("\n", start) 
 
- # Find start date
- start = raw_menus.find(date)
- # Find first line
- next_line_start = raw_menus.find("\n", start) 
+    all_menus = []
+    # Locate start and end lines for each menu
+    for i in range(0,3):
+        next_line_start = raw_menus.find("\n", next_line_start)
+        next_line_stops = raw_menus.find("\n", next_line_start+1)
+        all_menus.append(raw_menus[next_line_start+1:next_line_stops])
+        next_line_start = next_line_stops
 
- all_menus = []
- # Locate start and end lines for each menu
- for i in range(0,3):
-     next_line_start = raw_menus.find("\n", next_line_start)
-     next_line_stops = raw_menus.find("\n", next_line_start+1)
-     all_menus.append(raw_menus[next_line_start+1:next_line_stops])
-     next_line_start = next_line_stops
-
- return(all_menus)
+    return(all_menus)
 
  
 """Get food for Via Bona
 """
 def via_bona(date):
- 
- #date = "29.7.2019"
+    webpage = browser.get('https://www.via-bona.com/sl/ponudba-hrane/malice-in-kosila/')
 
- webpage = browser.get('https://www.via-bona.com/sl/ponudba-hrane/malice-in-kosila/')
- 
- raw_menus = browser.find_element_by_xpath("/html/body/div[5]/div/div/div[2]/div[2]/div/table[5]").text
+    raw_menus = browser.find_element_by_xpath("/html/body/div[5]/div/div/div[2]/div[2]/div/table[5]").text
 
- menu_start_words = ["\nNA  ŽLICO ", "\nMALICA ", "\nVEGE MALICA ", "\nSLADICA "]
+    menu_start_words = ["\nNA  ŽLICO ", "\nMALICA ", "\nVEGE MALICA ", "\nSLADICA "]
 
- test = raw_menus
+    test = raw_menus
 
- inital_location = []
+    inital_location = []
 
- # Get all inital menu location from keywords in menu_start_words
- for search_keyword in range(len(menu_start_words)):
-     inital_location.append([ (i.start(), i.end()) for i in re.finditer(menu_start_words[search_keyword], test)])
+    # Get all inital menu location from keywords in menu_start_words
+    for search_keyword in range(len(menu_start_words)):
+        inital_location.append([ (i.start(), i.end()) for i in re.finditer(menu_start_words[search_keyword], test)])
 
- # Unwrap list
- inital_location = sum(inital_location, [])
+    # Unwrap list
+    inital_location = sum(inital_location, [])
 
- shorter_raw_menus = test[inital_location[0][1]:inital_location[-1][1]]
+    shorter_raw_menus = test[inital_location[0][1]:inital_location[-1][1]]
 
- real_location_start = []
- real_location_ended = []
+    real_location_start = []
+    real_location_ended = []
 
- real_location_start = [ (i.start(), i.end()) for i in re.finditer("€\n", shorter_raw_menus)]
- real_location_ended = [ (i.start(), i.end()) for i in re.finditer("\n \n", shorter_raw_menus)]
+    real_location_start = [ (i.start(), i.end()) for i in re.finditer("€\n", shorter_raw_menus)]
+    real_location_ended = [ (i.start(), i.end()) for i in re.finditer("\n \n", shorter_raw_menus)]
 
- all_menus = []
- for i in range(len(inital_location)-1):
-     temp_menu = shorter_raw_menus[real_location_start[i][1]:real_location_ended[i][0]] 
-     temp_menu = temp_menu.replace("\n", " ")
-     temp_menu = temp_menu.replace("   ", " ")
-     temp_menu = temp_menu.replace("  ", " ")
-     temp_menu = temp_menu.lower().capitalize()
-     all_menus.append(temp_menu)
+    all_menus = []
+    for i in range(len(inital_location)-1):
+        temp_menu = shorter_raw_menus[real_location_start[i][1]:real_location_ended[i][0]] 
+        temp_menu = temp_menu.replace("\n", " ")
+        temp_menu = temp_menu.replace("   ", " ")
+        temp_menu = temp_menu.replace("  ", " ")
+        temp_menu = temp_menu.lower().capitalize()
+        all_menus.append(temp_menu)
 
- return(all_menus)
+    return(all_menus)
 
 
 """Get food for Barjan
 """
 def barjan(date):
+    url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
 
- #date = "26.7."
- url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
+    # Load Barjan FB page 
+    request  = urllib.request.Request(url)
+    response = urllib.request.urlopen(request)     
+    raw_html = response.read().decode('utf-8')
 
- # Load Barjan FB page 
- request  = urllib.request.Request(url)
- response = urllib.request.urlopen(request)     
- raw_html = response.read().decode('utf-8')
+    # Start and stop strings
+    start_location = date
+    end_location   = "</span></p><span class=\"text_exposed_hide\">"
 
- # Start and stop strings
- start_location = date
- end_location   = "</span></p><span class=\"text_exposed_hide\">"
+    # Find start and stop
+    raw_menu_start = raw_html.find(date)
+    raw_menu_stop  = raw_html.find(end_location, raw_menu_start)
 
- # Find start and stop
- raw_menu_start = raw_html.find(date)
- raw_menu_stop  = raw_html.find(end_location, raw_menu_start)
+    # Actual raw menus
+    raw_menus = raw_html[raw_menu_start:raw_menu_stop]
 
- # Actual raw menus
- raw_menus = raw_html[raw_menu_start:raw_menu_stop]
+    # Remove all tags and all the other crap
+    clean_menus = re.sub('<[^>]+>', '', raw_menus)
+    clean_menus = clean_menus.replace("...","")
+    clean_menus = clean_menus.replace(date, "")
 
- # Remove all tags and all the other crap
- clean_menus = re.sub('<[^>]+>', '', raw_menus)
- clean_menus = clean_menus.replace("...","")
- clean_menus = clean_menus.replace(date, "")
+    # Create a nicer list of menus 
+    nicer_list = clean_menus.split("-")
 
- # Create a nicer list of menus 
- nicer_list = clean_menus.split("-")
+    # Skip souppe of the day 
+    nicer_list = nicer_list[1:] 
 
- # Skip souppe of the day 
- nicer_list = nicer_list[1:] 
+    # Capitalize and create final menus
+    all_menus = []
+    for i in range(len(nicer_list)):
+        temp_menu = nicer_list[i].capitalize()
+        all_menus.append(temp_menu)
 
- # Capitalize and create final menus
- all_menus = []
- for i in range(len(nicer_list)):
-     temp_menu = nicer_list[i].capitalize()
-     all_menus.append(temp_menu)
-
- return(all_menus)
-
-
+    return(all_menus)
 
 """Get food for Marende Dulcis IJS
 """
 def marende_dulcis_ijs(date, day_of_week):
- # Little hack
- #-----------
- from tika import parser
- raw = parser.from_file('example.pdf')
- #print(raw['content'])
- raw_pdf = raw['content']
- #-----------
+    # Little hack
+    raw = parser.from_file('example.pdf')
+    raw_pdf = raw['content']
 
- # conda install -c conda-forge tika 
- from tika import parser
+    url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
 
- #date = "29072019"
- #day_of_week = 1
- 
- url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
+    # Download PDF
+    pdf_name = "ijs"+date
+    pdf_download_from_url(pdf_name, url)
 
- # Download PDF
- pdf_name = "ijs"+date
- pdf_download_from_url(pdf_name, url)
+    # Open and parse stored PDF
+    raw = parser.from_file(pdf_name + ".pdf")
+    raw_pdf = raw['content']
 
- # Open and parse stored PDF
- raw = parser.from_file(pdf_name + ".pdf")
- raw_pdf = raw['content']
+    # Remove excessive content
+    search_start_string = "@dulcis-gourmet.si. "
+    search_end_string   = "mailto:merende@dulcis-gourmet.si"
+    slo_start_location = raw_pdf.find(search_start_string)
+    eng_start_location = raw_pdf.find(search_end_string, slo_start_location+1)
 
- # Remove excessive content
- search_start_string = "@dulcis-gourmet.si. "
- search_end_string   = "mailto:merende@dulcis-gourmet.si"
- slo_start_location = raw_pdf.find(search_start_string)
- eng_start_location = raw_pdf.find(search_end_string, slo_start_location+1)
+    # Crop all that is not actual menu 
+    raw_menus = raw_pdf[slo_start_location:eng_start_location]
 
- # Crop all that is not actual menu 
- raw_menus = raw_pdf[slo_start_location:eng_start_location]
+    # Remove new line characters
+    raw_menus = raw_menus.replace("\n","")
 
- # Remove new line characters
- raw_menus = raw_menus.replace("\n","")
+    # Remove all shady alergene numbers and commas
+    raw_menus = re.sub("([0-9]+)"," ", raw_menus).replace(" ,", "")
 
- # Remove all shady alergene numbers and commas
- raw_menus = re.sub("([0-9]+)"," ", raw_menus).replace(" ,", "")
+    # Remove all multiple spaces
+    raw_menus = re.sub(" +", " ", raw_menus)
 
- # Remove all multiple spaces
- raw_menus = re.sub(" +", " ", raw_menus)
+    # "DODATNA PONUDBA SOLATE" has a higher priority than "DODATNA PONUDBA" for nicer split 
+    main_categories = "JUHA | ENOLONČNICA | MESNA JED | GLAVNA JED S PRILOGO | BREZMESNA JED | DODATNA PONUDBA SOLATE | DODATNA PONUDBA"
 
- # "DODATNA PONUDBA SOLATE" has a higher priority than "DODATNA PONUDBA" for nicer split 
- main_categories = "JUHA | ENOLONČNICA | MESNA JED | GLAVNA JED S PRILOGO | BREZMESNA JED | DODATNA PONUDBA SOLATE | DODATNA PONUDBA"
+    # Split raw menu depending on main_categories
+    raw_split = re.split(main_categories, raw_menus)
 
- # Split raw menu depending on main_categories
- raw_split = re.split(main_categories, raw_menus)
+    # Get full menu
+    full_week_menu = ijs_get_full_menu(raw_split)
 
- # Get full menu
- full_week_menu = ijs_get_full_menu(raw_split)
+    # Split "DODATNA PONUDBA" at full_week_menu[5] into to two lists
+    nicer_full_week_menu = full_week_menu[:5] + [full_week_menu[5][::2]] + [full_week_menu[5][1::2]] + full_week_menu[6:]
 
- # Split "DODATNA PONUDBA" at full_week_menu[5] into to two lists
- nicer_full_week_menu = full_week_menu[:5] + [full_week_menu[5][::2]] + [full_week_menu[5][1::2]] + full_week_menu[6:]
+    # Create a menu based on a given workday
+    all_menus = [] 
+    for i in range(1,8):
+        menu = nicer_full_week_menu[i][day_of_week]
+        all_menus.append(menu)
 
- # Create a menu based on a given workday
- all_menus = [] 
- for i in range(1,8):
-     menu = nicer_full_week_menu[i][day_of_week]
-     all_menus.append(menu)
-
- return(all_menus) 
+    return(all_menus) 
 
 
 """Get food for Loncek Kuhaj
 """
 def loncek_kuhaj(date):
+    url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
 
- #date = 0
+    # Get raw menus 
+    raw_menus = loncek_get_raw_menus(url)
 
- url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
+    # Remove all of the prices
+    raw_menus = re.sub("(\n[0-9]+,[0-9]+ €)"," ", raw_menus)
 
- # Get raw menus 
- raw_menus = loncek_get_raw_menus(url)
+    # Remove annoying DNEVNA JUHA and following juha/minestra/whatever
+    raw_menus = re.sub("(\nDNEVNA JUHA\n.*?\n)"," ", raw_menus)
 
- # Remove all of the prices
- raw_menus = re.sub("(\n[0-9]+,[0-9]+ €)"," ", raw_menus)
+    # Remove all the dates
+    raw_menus = re.sub("([0-9]+. [0-9]+. [0-9]+)"," ", raw_menus)
 
- # Remove annoying DNEVNA JUHA and following juha/minestra/whatever
- raw_menus = re.sub("(\nDNEVNA JUHA\n.*?\n)"," ", raw_menus)
+    # Remove all multiple spaces
+    raw_menus = re.sub(" +", " ", raw_menus)
 
- # Remove all the dates
- raw_menus = re.sub("([0-9]+. [0-9]+. [0-9]+)"," ", raw_menus)
+    # Split raw menu through days
+    splited_raw_menus = re.split(r"Ponedeljek, |Torek, |Sreda, |Četrtek, |Petek, ", raw_menus)
 
- # Remove all multiple spaces
- raw_menus = re.sub(" +", " ", raw_menus)
+    # Skip everything prior Ponedeljek
+    splited_raw_menus = splited_raw_menus[1:]
 
- # Split raw menu through days
- splited_raw_menus = re.split(r"Ponedeljek, |Torek, |Sreda, |Četrtek, |Petek, ", raw_menus)
+    # Split every day menu by "Dnevna juha, "
+    full_week_menu = []
+    for i in range(0,5):
+        day_menu = re.split(r"Dnevna juha, ", splited_raw_menus[i])
+        # Splitting defect, ignore
+        day_menu = day_menu[1:]
+        full_week_menu.append(day_menu)
 
- # Skip everything prior Ponedeljek
- splited_raw_menus = splited_raw_menus[1:]
+    # Capitalize and remove "\n"
+    all_menus = []
+    for i in range(len(full_week_menu)):
+        daily_menu = []
+        for j in full_week_menu[i]:
+            daily_menu.append(j.capitalize().replace("\n",""))
+        all_menus.append(daily_menu)
 
- # Split every day menu by "Dnevna juha, "
- full_week_menu = []
- for i in range(0,5):
-     day_menu = re.split(r"Dnevna juha, ", splited_raw_menus[i])
-     # Splitting defect, ignore
-     day_menu = day_menu[1:]
-     full_week_menu.append(day_menu)
-
- # Capitalize and remove "\n"
- all_menus = []
- for i in range(len(full_week_menu)):
-     daily_menu = []
-     for j in full_week_menu[i]:
-         daily_menu.append(j.capitalize().replace("\n",""))
-     all_menus.append(daily_menu)
-
- #final menus
- return(all_menus[date])
+    #final menus
+    return(all_menus[date])
 
 
 """Get food for Delicije - Fakulteta za Elektrotehniko Menza
 """
 def delicije_fe(date):
- 
- #date    = '29 jul'
+    webpage = "https://www.studentska-prehrana.si/restaurant/Details/2521#"
 
- webpage = "https://www.studentska-prehrana.si/restaurant/Details/2521#"
+    # Open desired site with the date
+    stud_preh_target_page(browser, webpage, date)
 
- # Open desired site with the date
- stud_preh_target_page(browser, webpage, date)
+    # Get raw food menus
+    raw_menu = stud_preh_get_raw_menus()
+    #print(raw_menu)
 
- # Get raw food menus
- raw_menu = stud_preh_get_raw_menus()
- #print(raw_menu)
+    # Get a total number of all menus
+    num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
 
- # Get a total number of all menus
- num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
+    # Parse menus into nicer format
+    parsed_menu = stud_preh_parsed_menus(num_of_all_menus)
 
- # Parse menus into nicer format
- parsed_menu = stud_preh_parsed_menus(num_of_all_menus)
-
- return(parsed_menu)
+    return(parsed_menu)
 
 
 """Get food for Kurji Tat
 """
 def kurji_tat(date):
- 
- #date    = '29 jul'
+    webpage = "https://www.studentska-prehrana.si/restaurant/Details/1429#"
 
- webpage = "https://www.studentska-prehrana.si/restaurant/Details/1429#"
+    # Open desired site with the date
+    stud_preh_target_page(browser, webpage, date)
 
- # Open desired site with the date
- stud_preh_target_page(browser, webpage, date)
+    # Get raw food menus
+    raw_menu = stud_preh_get_raw_menus()
 
- # Get raw food menus
- raw_menu = stud_preh_get_raw_menus()
- #print(raw_menu)
+    # Get a total number of all menus
+    num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
 
- # Get a total number of all menus
- num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
+    # Parse menus into nicer format
+    complete_menus = stud_preh_parsed_menus(num_of_all_menus)
 
- # Parse menus into nicer format
- complete_menus = stud_preh_parsed_menus(num_of_all_menus)
+    # Remove everyday menus
+    parsed_menu = stud_preh_remove_everyday_menus(complete_menus, num_of_all_menus, "Dunajski zrezek")
 
- # Remove everyday menus
- parsed_menu = stud_preh_remove_everyday_menus(complete_menus, num_of_all_menus, "Dunajski zrezek")
-
- return(parsed_menu)
+    return(parsed_menu)
 
 
 """Get food for Interspar Vic
 """
 def interspar_vic(date):
- 
- #date    = '29 jul'
+    webpage = "https://www.studentska-prehrana.si/restaurant/Details/1370#"
 
- webpage = "https://www.studentska-prehrana.si/restaurant/Details/1370#"
+    parsed_menu =[]
 
- parsed_menu =[]
+    # Open desired site with the date
+    stud_preh_target_page(browser, webpage, date)
 
- # Open desired site with the date
- stud_preh_target_page(browser, webpage, date)
+    # Get raw food menus
+    raw_menu = stud_preh_get_raw_menus()
 
- # Get raw food menus
- raw_menu = stud_preh_get_raw_menus()
- #print(raw_menu)
+    # Get a total number of all menus
+    num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
 
- # Get a total number of all menus
- num_of_all_menus = stud_preh_get_number_of_menus(raw_menu)
+    # Parse menus into nicer format
+    complete_menus = stud_preh_parsed_menus(num_of_all_menus)
 
- # Parse menus into nicer format
- complete_menus = stud_preh_parsed_menus(num_of_all_menus)
+    # Remove everyday menus
+    parsed_menu = stud_preh_remove_everyday_menus(complete_menus, num_of_all_menus, "Dunajski puranji zrezek, priloga")
 
- # Remove everyday menus
- parsed_menu = stud_preh_remove_everyday_menus(complete_menus, num_of_all_menus, "Dunajski puranji zrezek, priloga")
+    # Add dish of the week to the end
+    dish_of_the_week = spar_get_dish_of_the_week()
 
- # Add dish of the week to the end
- dish_of_the_week = spar_get_dish_of_the_week()
+    parsed_menu.append(dish_of_the_week)
 
- parsed_menu.append(dish_of_the_week)
-
- return(parsed_menu)
+    return(parsed_menu)
 
 
 """Get food for Kondor
 """
 def kondor(date):
- 
- #date = 0
+    url = "https://restavracijakondor.si/#menu"
 
- url = "https://restavracijakondor.si/#menu"
+    # Open url
+    webpage = browser.get(url)
 
- # Open url
- webpage = browser.get(url)
+    # Get raw menus
+    day_id_xpath = ["//*[@id='malice']/div[1]/div[1]/dl", "//*[@id='malice']/div[1]/div[2]/dl", "//*[@id='malice']/div[1]/div[3]/dl","//*[@id='malice']/div[2]/div[1]/dl", "//*[@id='malice']/div[2]/div[2]/dl"]
 
- # Get raw menus
- day_id_xpath = ["//*[@id='malice']/div[1]/div[1]/dl", "//*[@id='malice']/div[1]/div[2]/dl", "//*[@id='malice']/div[1]/div[3]/dl","//*[@id='malice']/div[2]/div[1]/dl", "//*[@id='malice']/div[2]/div[2]/dl"]
+    # Get raw text for targeted day
+    raw_text = browser.find_element_by_xpath(day_id_xpath[date]).text
 
- # Get raw text for targeted day
- raw_text = browser.find_element_by_xpath(day_id_xpath[date]).text
+    # Split by new line
+    raw_menus = raw_text.split("\n")
 
- # Split by new line
- raw_menus = raw_text.split("\n")
+    # Remove juha and other crap 
+    raw_menus = raw_menus[2:]
 
- # Remove juha and other crap 
- raw_menus = raw_menus[2:]
+    # Capitalize
+    parsed_menu = []
+    for i in range(0, len(raw_menus)):
+        parsed_menu.append(raw_menus[i].lower().capitalize())
 
- # Capitalize
- parsed_menu = []
- for i in range(0, len(raw_menus)):
-     parsed_menu.append(raw_menus[i].lower().capitalize())
-
- return(parsed_menu)
-
-
-# In[9]:
-
+    return(parsed_menu)
 
 """Wait until menus are shown and return raw menu list
 """
@@ -740,3 +599,73 @@ def get_ijs_date(work_day):
     
     return(date)
 
+if __name__ == "__main__":
+    # Date formatting
+    all_months = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "avg", "sep", "okt", "nov", "dec"]
+    #today = datetime.today()
+
+    # Get date
+    work_day = datetime.date.today().weekday() + 1
+
+    if work_day > 5:
+        work_day = 1
+
+    year = datetime.date.today().year
+    month = datetime.date.today().month
+    day = datetime.date.today().day
+
+    print(work_day, day, month, year)
+
+    # Generate the right day format for each website 
+    stud_preh_date = str("{:02d}".format(day))+" "+all_months[(month)-1]
+    marjetka_date = str(day)+"."+str(month)+"."+str(year)
+    viabona_date = marjetka_date
+    barjan_date = str(day)+"."+str(month)
+    loncek_kuhaj_date = work_day - 1
+    kondor_date = work_day
+    josko_date = get_ijs_date(datetime.date.today().weekday() + 1)
+
+    browser = webdriver.Chrome()
+
+    date    = '29 jul'
+    ddv_menu = dijaski_dom_vic(date)
+    print(ddv_menu)
+
+    date = "29.7.2019"
+    marjetica_menu = marjetica_tobacna(date)
+    print(marjetica_menu)
+
+    date = "29.7.2019"
+    via_bona_menu = via_bona(date)
+    print(via_bona_menu)
+
+    date = "26.7."
+    barjan_menu = barjan(date)
+    print(barjan_menu)
+
+    date = 0
+    loncek_kuhaj_menu = loncek_kuhaj(date)
+    print(loncek_kuhaj_menu)
+
+    date = '29 jul'
+    fe_menza_menu = delicije_fe(date)
+    print(fe_menza_menu)
+
+    date = '29 jul'
+    kurji_tat_menu = kurji_tat(date)
+    print(kurji_tat_menu)
+
+    date = '29 jul'
+    interspar_vic_menu = interspar_vic(date)
+    print(interspar_vic_menu)
+
+    date = 0
+    kondor_menu = kondor(date)
+    print(kondor_menu)
+
+    #date = "29072019"
+    #day_of_week = 0
+    #ijs_menu = marende_dulcis_ijs(date, day_of_week)
+    #print(ijs_menu)
+
+    browser.close()
