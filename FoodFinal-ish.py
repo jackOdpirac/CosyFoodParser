@@ -316,10 +316,20 @@ def kondor(date):
 
     # Open url
     webpage = browser.get(url)
-
+        
     # Get raw menus
     day_id_xpath = ["//*[@id='malice']/div[1]/div[1]/dl", "//*[@id='malice']/div[1]/div[2]/dl", "//*[@id='malice']/div[1]/div[3]/dl","//*[@id='malice']/div[2]/div[1]/dl", "//*[@id='malice']/div[2]/div[2]/dl"]
 
+    # Wait until menu is loaded
+    try:
+        # Wait
+        while len(browser.find_element_by_xpath(day_id_xpath[date]).text) == 0:
+            pass
+            #print("waiting ...")
+    except:
+        browser.find_element_by_xpath(day_id_xpath[date]).text
+        print("Xpath problem")    
+    
     # Get raw text for targeted day
     raw_text = browser.find_element_by_xpath(day_id_xpath[date]).text
 
@@ -568,7 +578,7 @@ def spar_get_dish_of_the_week():
         browser.get(webpage)
 
         # Dish of the week iz here
-        dish_of_the_week = browser.find_element_by_xpath("//*[@id='main']/div/div[2]/div[1]/div[1]/div[1]/div[2]/div[1]/table[1]/tbody/tr[2]").text
+        dish_of_the_week = browser.find_element_by_xpath("/html/body/main/div[3]/article[1]/div/div/div[2]/div/h4").text
 
         # Remove all of the prices
         dish_of_the_week = re.sub("([0-9]+,[0-9]+ €)"," ", dish_of_the_week)
@@ -627,45 +637,45 @@ if __name__ == "__main__":
 
     browser = webdriver.Chrome()
 
-    date    = '29 jul'
+    date    = '19 avg'
     ddv_menu = dijaski_dom_vic(date)
-    print(ddv_menu)
+    print("DDV: "+str(ddv_menu))
 
-    date = "29.7.2019"
+    date = "19.8.2019"
     marjetica_menu = marjetica_tobacna(date)
-    print(marjetica_menu)
+    print("Marjetice: "+str(marjetica_menu))
 
-    date = "29.7.2019"
+    date = "19.8.2019"
     via_bona_menu = via_bona(date)
-    print(via_bona_menu)
+    print("ViaBona: "+str(via_bona_menu))
 
-    date = "26.7."
+    date = "14.8."
     barjan_menu = barjan(date)
-    print(barjan_menu)
+    print("Barjan: "+str(barjan_menu))
 
     date = 0
     loncek_kuhaj_menu = loncek_kuhaj(date)
-    print(loncek_kuhaj_menu)
+    print("LoncekKuhaj: "+str(loncek_kuhaj_menu))
 
-    date = '29 jul'
+    date = '19 avg'
     fe_menza_menu = delicije_fe(date)
-    print(fe_menza_menu)
+    print("MenzaFe: "+str(fe_menza_menu))
 
-    date = '29 jul'
+    date = '19 avg'
     kurji_tat_menu = kurji_tat(date)
-    print(kurji_tat_menu)
+    print("KurjiTat: "+str(kurji_tat_menu))
 
-    date = '29 jul'
+    date = '19 avg'
     interspar_vic_menu = interspar_vic(date)
-    print(interspar_vic_menu)
+    print("SparVic: "+str(interspar_vic_menu))
 
     date = 0
     kondor_menu = kondor(date)
-    print(kondor_menu)
+    print("Kondor: "+str(kondor_menu))
 
-    #date = "29072019"
-    #day_of_week = 0
-    #ijs_menu = marende_dulcis_ijs(date, day_of_week)
-    #print(ijs_menu)
+    date = "19082019"
+    day_of_week = 0
+    ijs_menu = marende_dulcis_ijs(date, day_of_week)
+    print("IJS "+str(ijs_menu))
 
     browser.close()
