@@ -8,6 +8,8 @@ from time import sleep
 import time
 from tika import parser
 
+browser = webdriver.Chrome()
+
 """Get food for Dijaski Dom Vic
 """
 def dijaski_dom_vic(date):
@@ -634,8 +636,6 @@ if __name__ == "__main__":
     loncek_kuhaj_date = work_day - 1
     kondor_date = work_day
     josko_date = get_ijs_date(datetime.date.today().weekday() + 1)
-
-    browser = webdriver.Chrome()
 
     date    = '19 avg'
     ddv_menu = dijaski_dom_vic(date)
