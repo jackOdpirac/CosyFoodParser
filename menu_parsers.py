@@ -8,7 +8,11 @@ from time import sleep
 import time
 from tika import parser
 
-browser = webdriver.Chrome()
+# Disable loading of images
+chromeOptions = webdriver.ChromeOptions()
+prefs = {"profile.managed_default_content_settings.images": 2}
+chromeOptions.add_experimental_option("prefs", prefs)
+browser = webdriver.Chrome(chrome_options=chromeOptions)
 
 def dijaski_dom_vic(date):
     """Get food for Dijaski Dom Vic
