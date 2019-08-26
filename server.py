@@ -7,8 +7,13 @@ app = Flask(__name__)
 
 @app.route('/')
 def serve():
-    date = '19 avg'
-    interspar_vic_menu = menu_parsers.interspar_vic(date)
+    """Default route that is run when the MM server connects to the API.
+
+    Returns
+    -------
+    flask.Response
+        Response with JSON containing lunch information.
+    """
 
     json_menu_items = [convert_menu_to_api_element(menu) for menu in get_all_menus()]
 
@@ -19,13 +24,30 @@ def serve():
     return jsonify(response)
 
 def convert_menu_to_api_element(menu_items: List[str]) -> Dict[str,str]:
+    """Convert a list of menu options to a structure that can be converted into a JSON.
+
+    Parameters
+    ----------
+    menu_items : List[str]
+        List of menu options.
+
+    Returns
+    -------
+    Dict[str,str]
+        JSON representation of the menu options.
+    """
     menu_text = '\n'.join(menu_items)
 
     return {'text': menu_text, 'response_type': 'in_channel'}
 
 def get_all_menus() -> List[List[str]]:
-    # Date formatting
-    all_months = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "avg", "sep", "okt", "nov", "dec"]
+    """Get a list of all menus.
+
+    Returns
+    -------
+    List[List[str]]
+        The first list represents different restaurants. The contained lists contain individual menu items.
+    """
 
     # Get date
     work_day = datetime.date.today().weekday() + 1
@@ -38,10 +60,10 @@ def get_all_menus() -> List[List[str]]:
     day = datetime.date.today().day
 
     # Generate the right day format for each website 
-    stud_preh_date = str("{:02d}".format(day))+" "+all_months[(month)-1]
-    marjetka_date = str(day)+"."+str(month)+"."+str(year)
+    stud_preh_date = "{:02d} {}".format(day, menu_parsers.get_month_as_string(month))
+    marjetka_date = "{}.{}.{}".format(day, month, year)
     viabona_date = marjetka_date
-    barjan_date = str(day)+"."+str(month)
+    barjan_date = "{}.{}".format(day, month)
     loncek_kuhaj_date = work_day - 1
     kondor_date = work_day
     josko_date = menu_parsers.get_ijs_date(datetime.date.today().weekday() + 1)

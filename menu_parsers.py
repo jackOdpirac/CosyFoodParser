@@ -10,9 +10,10 @@ from tika import parser
 
 browser = webdriver.Chrome()
 
-"""Get food for Dijaski Dom Vic
-"""
 def dijaski_dom_vic(date):
+    """Get food for Dijaski Dom Vic
+    """
+
     webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/1485'#1314'
 
     # Open desired site with the date
@@ -28,9 +29,10 @@ def dijaski_dom_vic(date):
     return(parsed_menu)
 
 
-"""Get food for Marjetica
-"""
 def marjetica_tobacna(date):
+    """Get food for Marjetica
+    """
+
     webpage = browser.get('http://marjetice.si/')
 
     # Get and parse menus into nicer format
@@ -55,9 +57,10 @@ def marjetica_tobacna(date):
     return(all_menus)
 
  
-"""Get food for Via Bona
-"""
 def via_bona(date):
+    """Get food for Via Bona
+    """
+
     webpage = browser.get('https://www.via-bona.com/sl/ponudba-hrane/malice-in-kosila/')
 
     raw_menus = browser.find_element_by_xpath("/html/body/div[5]/div/div/div[2]/div[2]/div/table[5]").text
@@ -95,9 +98,10 @@ def via_bona(date):
     return(all_menus)
 
 
-"""Get food for Barjan
-"""
 def barjan(date):
+    """Get food for Barjan
+    """
+
     url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
 
     # Load Barjan FB page 
@@ -135,9 +139,10 @@ def barjan(date):
 
     return(all_menus)
 
-"""Get food for Marende Dulcis IJS
-"""
 def marende_dulcis_ijs(date, day_of_week):
+    """Get food for Marende Dulcis IJS
+    """
+
     # Little hack
     raw = parser.from_file('example.pdf')
     raw_pdf = raw['content']
@@ -191,9 +196,10 @@ def marende_dulcis_ijs(date, day_of_week):
     return(all_menus) 
 
 
-"""Get food for Loncek Kuhaj
-"""
 def loncek_kuhaj(date):
+    """Get food for Loncek Kuhaj
+    """
+
     url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
 
     # Get raw menus 
@@ -237,9 +243,10 @@ def loncek_kuhaj(date):
     return(all_menus[date])
 
 
-"""Get food for Delicije - Fakulteta za Elektrotehniko Menza
-"""
 def delicije_fe(date):
+    """Get food for Delicije - Fakulteta za Elektrotehniko Menza
+    """
+
     webpage = "https://www.studentska-prehrana.si/restaurant/Details/2521#"
 
     # Open desired site with the date
@@ -258,9 +265,10 @@ def delicije_fe(date):
     return(parsed_menu)
 
 
-"""Get food for Kurji Tat
-"""
 def kurji_tat(date):
+    """Get food for Kurji Tat
+    """
+
     webpage = "https://www.studentska-prehrana.si/restaurant/Details/1429#"
 
     # Open desired site with the date
@@ -281,9 +289,10 @@ def kurji_tat(date):
     return(parsed_menu)
 
 
-"""Get food for Interspar Vic
-"""
 def interspar_vic(date):
+    """Get food for Interspar Vic
+    """
+
     webpage = "https://www.studentska-prehrana.si/restaurant/Details/1370#"
 
     parsed_menu =[]
@@ -311,9 +320,10 @@ def interspar_vic(date):
     return(parsed_menu)
 
 
-"""Get food for Kondor
-"""
 def kondor(date):
+    """Get food for Kondor
+    """
+
     url = "https://restavracijakondor.si/#menu"
 
     # Open url
@@ -348,9 +358,10 @@ def kondor(date):
 
     return(parsed_menu)
 
-"""Wait until menus are shown and return raw menu list
-"""
 def stud_preh_get_raw_menus():
+    """Wait until menus are shown and return raw menu list
+    """
+
     try:
         # Wait until menu is loaded
         while len(browser.find_element_by_xpath("//*[@id='menu-list']").text) == 0:
@@ -361,9 +372,10 @@ def stud_preh_get_raw_menus():
     except:
         print("Xpath problem")
 
-"""Load desired page
-"""
 def stud_preh_target_page(browser, webpage, date):
+    """Load desired page
+    """
+
     try:
         browser.get(webpage)
 
@@ -372,9 +384,10 @@ def stud_preh_target_page(browser, webpage, date):
     except:
         print("No matching date for studentska prehrana.")
     
-"""Return the total number of all available menus.
-"""
 def stud_preh_get_number_of_menus(parse_menu):
+    """Return the total number of all available menus.
+    """
+
     try:
         total_dishes = 0
         current_dish = 0
@@ -387,9 +400,10 @@ def stud_preh_get_number_of_menus(parse_menu):
     except:
         print("Poblem finding total number of menus")
         
-"""Return all available menus in a nice format
-"""
 def stud_preh_parsed_menus(num_of_menus):
+    """Return all available menus in a nice format
+    """
+
     try:
         all_menus = []
         # Get all the menus
@@ -402,9 +416,10 @@ def stud_preh_parsed_menus(num_of_menus):
     except:
         print("Xpath problem")
         
-"""Remove all everyday menus
-"""       
 def stud_preh_remove_everyday_menus(menu, num_of_all_menus, menu_delimiter):
+    """Remove all everyday menus
+    """       
+
     try:
         # find menu delimiter search string
         for i in range(0, num_of_all_menus):
@@ -416,9 +431,10 @@ def stud_preh_remove_everyday_menus(menu, num_of_all_menus, menu_delimiter):
     except:
         print("Problem finding menu_delimiter")
         
-"""Return all available menus in a nice format
-"""
 def marjetka_get_menus(date):
+    """Return all available menus in a nice format
+    """
+
     try:
         raw_menus = browser.find_element_by_xpath("/html/body/div/div[3]/div[1]/div[1]/div/div/div[2]/div/div").text
 
@@ -444,9 +460,10 @@ def marjetka_get_menus(date):
         print("Problem finding matching date for marjetka")
         
         
-"""Load Barjan FB page
-"""
 def barjan_fb_target_page(url):
+    """Load Barjan FB page
+    """
+
     try:
         # Load webpage
         request  = urllib.request.Request(url)
@@ -458,9 +475,10 @@ def barjan_fb_target_page(url):
         print("Problem opening Barjan FB url")
         
         
-"""Find beggining and the end of the raw menu for specific date from Barjan's FB page
-"""
 def fb_barjan_get_raw_menus(date, raw_html):
+    """Find beggining and the end of the raw menu for specific date from Barjan's FB page
+    """
+
     try:
         # Start and stop strings
         start_location = date
@@ -478,9 +496,10 @@ def fb_barjan_get_raw_menus(date, raw_html):
         return(0)
 
     
-"""Beautify and parse Barjan's raw menus
-"""
 def fb_barjan_beautify_raw_menus(raw_menus):
+    """Beautify and parse Barjan's raw menus
+    """
+
     try:
         # Remove all tags and all the other crap
         clean_menus = re.sub('<[^>]+>', '', raw_menus)
@@ -506,9 +525,10 @@ def fb_barjan_beautify_raw_menus(raw_menus):
 
     
 
-"""Download PDF from given url
-"""
 def pdf_download_from_url(file_name, download_url):
+    """Download PDF from given url
+    """
+
     try:
         response = urllib.request.urlopen(download_url)
         file = open(file_name + ".pdf", 'wb')
@@ -518,9 +538,10 @@ def pdf_download_from_url(file_name, download_url):
         print("Problem while downloading PDF")
         
 
-"""Get individual menu positions depending on a upper case
-"""
 def ijs_get_individual_food_locations(sub_menu):
+    """Get individual menu positions depending on a upper case
+    """
+
     try:
         slo_upper_alphabet = ["A","B","C","Č","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","Š","T","U","V","Z","Ž"]
         slo_lower_alphabet = ["a","b","c","č","d","e","f","g","h","i","j","k","l","m","n","o","p","r","s","š","t","u","v","z","ž",]
@@ -538,9 +559,10 @@ def ijs_get_individual_food_locations(sub_menu):
     except:
         print("Something went wrong while searching for the menus positions")
 
-"""Get a complete, parsed weekly menu
-"""
 def ijs_get_full_menu(divided_raw_menu):
+    """Get a complete, parsed weekly menu
+    """
+
     try:
         full_menu = []
         # Cycle through all main the categories
@@ -559,9 +581,10 @@ def ijs_get_full_menu(divided_raw_menu):
     except:
         print("Something went wrong during parsing")
         
-"""Load Loncek Kuhaj page
-"""
 def loncek_get_raw_menus(url):
+    """Load Loncek Kuhaj page
+    """
+
     try:
         # Load webpage
         webpage = browser.get('https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php')
@@ -572,9 +595,10 @@ def loncek_get_raw_menus(url):
     except:
         print("Problem opening Loncek Kuhaj url")
         
-"""Get Spar dish of the week 
-"""
 def spar_get_dish_of_the_week():
+    """Get Spar dish of the week 
+    """
+
     try:
         webpage = "https://www.spar.si/sl_SI/aktualno/restavracija-interspar/tedenski-meni.html"
         browser.get(webpage)
@@ -595,9 +619,10 @@ def spar_get_dish_of_the_week():
         print("Problem finding dish of the week.")
         
         
-"""Calculate first or last Monday for Josko
-"""
 def get_ijs_date(work_day):
+    """Calculate first or last Monday for Josko
+    """
+
     # Get todays date
     today = datetime.date.today()
     
@@ -610,6 +635,25 @@ def get_ijs_date(work_day):
     date = str("{:02d}".format(monday.day))+str("{:02d}".format(monday.month))+str(monday.year)
     
     return(date)
+
+def get_month_as_string(month : int) -> str:
+    """Get the three letter representation of the specified month.
+
+    Parameters
+    ----------
+    month : int
+        Number of the month between 1 and 12.
+
+    Returns
+    -------
+    str
+        Three letter string representation of the month.
+    """
+
+    # Date formatting
+    all_months = ("jan", "feb", "mar", "apr", "maj", "jun", "jul", "avg", "sep", "okt", "nov", "dec")
+
+    return all_months[month - 1]
 
 if __name__ == "__main__":
     # Date formatting
@@ -629,7 +673,7 @@ if __name__ == "__main__":
     print(work_day, day, month, year)
 
     # Generate the right day format for each website 
-    stud_preh_date = str("{:02d}".format(day))+" "+all_months[(month)-1]
+    stud_preh_date = str("{:02d}".format(day))+" "+get_month_as_string(month)
     marjetka_date = str(day)+"."+str(month)+"."+str(year)
     viabona_date = marjetka_date
     barjan_date = str(day)+"."+str(month)
