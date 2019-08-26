@@ -1,9 +1,10 @@
 from flask import Flask, jsonify
 from typing import List, Dict
 import datetime
-import menu_parsers
+from menu_parsers import MenuParsers
 
 app = Flask(__name__)
+parsers = MenuParsers()
 
 @app.route('/')
 def serve():
@@ -60,21 +61,21 @@ def get_all_menus() -> List[List[str]]:
     day = datetime.date.today().day
 
     # Generate the right day format for each website 
-    stud_preh_date = "{:02d} {}".format(day, menu_parsers.get_month_as_string(month))
+    stud_preh_date = "{:02d} {}".format(day, parsers.get_month_as_string(month))
     marjetka_date = "{}.{}.{}".format(day, month, year)
     viabona_date = marjetka_date
     barjan_date = "{}.{}".format(day, month)
     loncek_kuhaj_date = work_day - 1
     kondor_date = work_day
-    josko_date = menu_parsers.get_ijs_date(datetime.date.today().weekday() + 1)
+    josko_date = parsers.get_ijs_date(datetime.date.today().weekday() + 1)
 
     menus = []
 
     # FIXME: Studentska prehrana, barjan and IJS not working
-    menus.append(menu_parsers.marjetica_tobacna(marjetka_date))
-    menus.append(menu_parsers.via_bona(viabona_date))
-    menus.append(menu_parsers.loncek_kuhaj(loncek_kuhaj_date))
-    menus.append(menu_parsers.kondor(kondor_date))
+    menus.append(parsers.marjetica_tobacna(marjetka_date))
+    menus.append(parsers.via_bona(viabona_date))
+    menus.append(parsers.loncek_kuhaj(loncek_kuhaj_date))
+    menus.append(parsers.kondor(kondor_date))
 
     return menus
 
