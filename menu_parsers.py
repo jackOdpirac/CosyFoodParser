@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import datetime
 import re
 import urllib
@@ -10,11 +11,7 @@ from tika import parser
 
 class MenuParsers:
     def __init__(self):
-        # Disable loading of images
-        chromeOptions = webdriver.ChromeOptions()
-        prefs = {"profile.managed_default_content_settings.self, images": 2}
-        chromeOptions.add_experimental_option("prefs", prefs)
-        self.browser = webdriver.Chrome(chrome_options=chromeOptions)
+        self.browser = webdriver.Remote("http://chrome:4444/wd/hub", DesiredCapabilities.CHROME)
 
     def __del__(self):
         self.browser.close()
