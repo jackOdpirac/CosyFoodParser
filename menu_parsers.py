@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import datetime
 import re
+import os
 import urllib
 from urllib.request import urlopen
 from time import sleep
@@ -11,7 +12,18 @@ from tika import parser
 
 class MenuParsers:
     def __init__(self):
-        self.browser = webdriver.Remote("http://chrome:4444/wd/hub", DesiredCapabilities.CHROME)
+        # If the variable is set, Selenium will attempt to
+        # connect to a remote Chromedriver.
+        host_var = "CHROME_HOST"
+        if host_var in os.environ:
+            url = "http://{}/wd/hub".format(os.environ.get(host_var))
+            self.browser = webdriver.Remote(url, DesiredCapabilities.CHROME)
+        else:
+            # Disable loading of images
+            chromeOptions = webdriver.ChromeOptions()
+            prefs = {"profile.managed_default_content_settings.images": 2}
+            chromeOptions.add_experimental_option("prefs", prefs)
+            self.browser = webdriver.Chrome(chrome_options=chromeOptions)
 
     def __del__(self):
         self.browser.close()
