@@ -8,7 +8,7 @@ import urllib
 from urllib.request import urlopen
 from time import sleep
 import time
-from tika import parser
+import fitz
 
 class MenuParsers:
     def __init__(self):
@@ -160,11 +160,7 @@ class MenuParsers:
     def marende_dulcis_ijs(self, date, day_of_week):
         """Get food for Marende Dulcis IJS
         """
-
-        # Little hack
-        raw = parser.from_file('example.pdf')
-        raw_pdf = raw['content']
-
+        
         url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
 
         # Download PDF
@@ -172,17 +168,19 @@ class MenuParsers:
         self.pdf_download_from_url(pdf_name, url)
 
         # Open and parse stored PDF
-        raw = parser.from_file(pdf_name + ".pdf")
-        raw_pdf = raw['content']
+        #raw = parser.from_file(pdf_name + ".pdf")
+        #raw_pdf = raw['content']
 
+        # Open and parse stored PDF
+        raw = fitz.Document(pdf_name + ".pdf")
+        raw_pdf = raw.loadPage(0)
+        raw_text = raw_pdf.getText("type")
+        
         # Remove excessive content
         search_start_string = "@dulcis-gourmet.si. "
-        search_end_string   = "mailto:merende@dulcis-gourmet.si"
-        slo_start_location = raw_pdf.find(search_start_string)
-        eng_start_location = raw_pdf.find(search_end_string, slo_start_location+1)
 
         # Crop all that is not actual menu 
-        raw_menus = raw_pdf[slo_start_location:eng_start_location]
+        raw_menus = raw_text[slo_start_location:]
 
         # Remove new line characters
         raw_menus = raw_menus.replace("\n","")
