@@ -79,34 +79,20 @@ def get_all_menus() -> List[List[str]]:
         The first list represents different restaurants. The contained lists contain individual menu items.
     """
 
-    # Get date
-    work_day = datetime.date.today().weekday() + 1
+    today = datetime.date.today()
 
-    if work_day > 5:
-        work_day = 1
-
-    year = datetime.date.today().year
-    month = datetime.date.today().month
-    day = datetime.date.today().day
-
-    # Generate the right day format for each website 
-    stud_preh_date = "{:02d} {}".format(day, parsers.get_month_as_string(month))
-    marjetka_date = "{}.{}.{}".format(day, month, year)
-    viabona_date = marjetka_date
-    barjan_date = "{}.{}".format(day, month)
-    loncek_kuhaj_date = work_day - 1
-    kondor_date = work_day
-    josko_date = parsers.get_ijs_date(datetime.date.today().weekday() + 1)
-
-    menus = []
-
-    # FIXME: Studentska prehrana, barjan and IJS not working
-    menus.append(parsers.marjetica_tobacna(marjetka_date))
-    menus.append(parsers.via_bona(viabona_date))
-    menus.append(parsers.loncek_kuhaj(loncek_kuhaj_date))
-    menus.append(parsers.kondor(kondor_date))
-
-    return menus
+    return [
+        parsers.marjetica_tobacna(today),
+        parsers.via_bona(today),
+        parsers.loncek_kuhaj(today),
+        # menus.append(parsers.kondor(kondor_date)),
+        parsers.dijaski_dom_vic(today),
+        # parsers.barjan(today),
+        parsers.delicije_fe(today),
+        parsers.kurji_tat(today),
+        parsers.interspar_vic(today)
+        # parsers.marende_dulcis_ijs(date, today)
+    ]
 
 def get_menu(restaurant : str) -> List[str]:
     """Get the menu of a single restaurant.
@@ -123,30 +109,37 @@ def get_menu(restaurant : str) -> List[str]:
     """
 
     # Get date
-    work_day = datetime.date.today().weekday() + 1
-
-    if work_day > 5:
-        work_day = 1
-
-    year = datetime.date.today().year
-    month = datetime.date.today().month
-    day = datetime.date.today().day
+    date = datetime.date.today()
 
     if restaurant == "marjetica":
-        date = "{}.{}.{}".format(day, month, year)
         return parsers.marjetica_tobacna(date)
 
     elif restaurant == "viabona":
-        date = "{}.{}.{}".format(day, month, year)
         return parsers.via_bona(date)
 
     elif restaurant == "loncekkuhaj":
-        date = work_day - 1
         return parsers.loncek_kuhaj(date)
 
     elif restaurant == "kondor":
-        date = work_day
         return parsers.kondor(date)
+
+    elif restaurant == "dd" or restaurant == "dijaskidom":
+        return parsers.dijaski_dom_vic(date)
+    
+    elif restaurant == "barjan":
+        return parsers.barjan(date)
+        
+    elif restaurant == "fe":
+        return parsers.delicije_fe(date)
+        
+    elif restaurant == "kurjitat":
+        return parsers.kurji_tat(date)
+        
+    elif restaurant == "spar":
+        return parsers.interspar_vic(date)
+        
+    elif restaurant == "ijs":
+        return parsers.marende_dulcis_ijs(date)
     
     else:
         return []
