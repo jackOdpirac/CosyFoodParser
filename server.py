@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, request
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import datetime
 from menu_parsers import MenuParsers
+from cache import Cache
 
 app = Flask(__name__)
 parsers = MenuParsers()
+cache = Cache()
 
 @app.route('/')
 def serve():
@@ -70,7 +72,7 @@ def convert_menu_to_api_element(menu_items: List[str]) -> Dict[str,str]:
 
     return {'text': menu_text, 'response_type': 'in_channel'}
 
-def get_all_menus() -> List[List[str]]:
+def get_all_menus() -> Tuple[List[str]]:
     """Get a list of all menus.
 
     Returns
@@ -79,20 +81,23 @@ def get_all_menus() -> List[List[str]]:
         The first list represents different restaurants. The contained lists contain individual menu items.
     """
 
-    today = datetime.date.today()
+    cache.update()
+    return cache.get()
 
-    return [
-        parsers.marjetica_tobacna(today),
-        parsers.via_bona(today),
-        parsers.loncek_kuhaj(today),
-        # menus.append(parsers.kondor(kondor_date)),
-        parsers.dijaski_dom_vic(today),
-        # parsers.barjan(today),
-        parsers.delicije_fe(today),
-        parsers.kurji_tat(today),
-        parsers.interspar_vic(today)
-        # parsers.marende_dulcis_ijs(date, today)
-    ]
+    # today = datetime.date.today()
+
+    # return (
+    #     parsers.marjetica_tobacna(today),
+    #     parsers.via_bona(today),
+    #     parsers.loncek_kuhaj(today),
+    #     # menus.append(parsers.kondor(kondor_date)),
+    #     parsers.dijaski_dom_vic(today),
+    #     # parsers.barjan(today),
+    #     parsers.delicije_fe(today),
+    #     parsers.kurji_tat(today),
+    #     parsers.interspar_vic(today)
+    #     # parsers.marende_dulcis_ijs(date, today)
+    # )
 
 def get_menu(restaurant : str) -> List[str]:
     """Get the menu of a single restaurant.
@@ -123,7 +128,7 @@ def get_menu(restaurant : str) -> List[str]:
     elif restaurant == "kondor":
         return parsers.kondor(date)
 
-    elif restaurant == "dd" or restaurant == "dijaskidom":
+    elif restaurant == "dijaskidom":
         return parsers.dijaski_dom_vic(date)
     
     elif restaurant == "barjan":
