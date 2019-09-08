@@ -28,13 +28,15 @@ class MenuParsers:
     def __del__(self):
         self.browser.close()
 
+        
     def dijaski_dom_vic(self, menu_date : datetime.date):
         """Get food for Dijaski Dom Vic
         """
         
-        date = "{:02d} {}".format(menu_date.day, self.get_month_as_string(menu_date.month))
-
-        webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/1485'
+        # Find next working day
+        date = self.get_studentska_date(menu_date)
+        
+        webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/1314'
 
         # Open desired site with the date
         self.stud_preh_target_page(self.browser, webpage, date)
@@ -49,6 +51,25 @@ class MenuParsers:
         return(parsed_menu)
 
 
+    def get_studentska_date(self, menu_date : datetime.date):
+        """Calculate next working day for studentska prehrana
+        """
+
+        today = datetime.date.today()
+        
+        work_day = datetime.date.today().weekday() + 1
+
+        # Select first next or last monday
+        if work_day > 5:
+            next_day = today + datetime.timedelta(days=-today.weekday(), weeks=1)
+        else:
+            next_day = today
+            
+        date = "{:02d} {}".format(next_day.day, self.get_month_as_string(next_day.month))
+        
+        return(date)
+    
+    
     def marjetica_tobacna(self, menu_date : datetime.date):
         """Get food for Marjetica
         """
@@ -169,8 +190,7 @@ class MenuParsers:
         """Get food for Marende Dulcis IJS
         """
 
-        date = self.get_ijs_date(menu_date)
-        day_of_week = menu_date.weekday()
+        date, day_of_week = self.get_ijs_date(menu_date)
         
         url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
 
@@ -179,17 +199,14 @@ class MenuParsers:
         self.pdf_download_from_url(pdf_name, url)
 
         # Open and parse stored PDF
-        #raw = parser.from_file(pdf_name + ".pdf")
-        #raw_pdf = raw['content']
-
-        # Open and parse stored PDF
         raw = fitz.Document(pdf_name + ".pdf")
         raw_pdf = raw.loadPage(0)
         raw_text = raw_pdf.getText("type")
         
         # Remove excessive content
         search_start_string = "@dulcis-gourmet.si. "
-
+        slo_start_location = raw_text.find(search_start_string)
+        
         # Crop all that is not actual menu 
         raw_menus = raw_text[slo_start_location:]
 
@@ -202,6 +219,9 @@ class MenuParsers:
         # Remove all multiple spaces
         raw_menus = re.sub(" +", " ", raw_menus)
 
+        # Take care of a capitalized second words which are not nice for parser
+        raw_menus = self.ijs_convert_special_words_to_lower_case(raw_menus)       
+        
         # "DODATNA PONUDBA SOLATE" has a higher priority than "DODATNA PONUDBA" for nicer split 
         main_categories = "JUHA | ENOLONČNICA | MESNA JED | GLAVNA JED S PRILOGO | BREZMESNA JED | DODATNA PONUDBA SOLATE | DODATNA PONUDBA"
 
@@ -209,11 +229,11 @@ class MenuParsers:
         raw_split = re.split(main_categories, raw_menus)
 
         # Get full menu
-        full_week_menu = ijs_get_full_menu(raw_split)
+        full_week_menu = self.ijs_get_full_menu(raw_split)
 
         # Split "DODATNA PONUDBA" at full_week_menu[5] into to two lists
         nicer_full_week_menu = full_week_menu[:5] + [full_week_menu[5][::2]] + [full_week_menu[5][1::2]] + full_week_menu[6:]
-
+        
         # Create a menu based on a given workday
         all_menus = [] 
         for i in range(1,8):
@@ -279,7 +299,8 @@ class MenuParsers:
         """Get food for Delicije - Fakulteta za Elektrotehniko Menza
         """
 
-        date = "{:02d} {}".format(menu_date.day, self.get_month_as_string(menu_date.month))
+        # Find next working day
+        date = self.get_studentska_date(menu_date)
 
         webpage = "https://www.studentska-prehrana.si/restaurant/Details/2521#"
 
@@ -303,7 +324,8 @@ class MenuParsers:
         """Get food for Kurji Tat
         """
 
-        date = "{:02d} {}".format(menu_date.day, self.get_month_as_string(menu_date.month))
+        # Find next working day
+        date = self.get_studentska_date(menu_date)
 
         webpage = "https://www.studentska-prehrana.si/restaurant/Details/1429#"
 
@@ -329,7 +351,8 @@ class MenuParsers:
         """Get food for Interspar Vic
         """
 
-        date = "{:02d} {}".format(menu_date.day, self.get_month_as_string(menu_date.month))
+        # Find next working day
+        date = self.get_studentska_date(menu_date)
 
         webpage = "https://www.studentska-prehrana.si/restaurant/Details/1370#"
 
@@ -362,10 +385,10 @@ class MenuParsers:
         """Get food for Kondor
         """
 
-        date = menu_date.weekday() + 1
+        date = menu_date.weekday()
 
-        if date > 5:
-            date = 1
+        if date > 4:
+            date = 0
 
         url = "https://restavracijakondor.si/#menu"
 
@@ -418,7 +441,7 @@ class MenuParsers:
     def stud_preh_target_page(self, browser, webpage, date):
         """Load desired page
         """
-
+        
         try:
             self.browser.get(webpage)
 
@@ -624,6 +647,19 @@ class MenuParsers:
         except:
             print("Something went wrong during parsing")
             
+    def ijs_convert_special_words_to_lower_case(self, replaced_raw_menu):
+        """Convert words to lower case that would otherwise cause havoc
+        """
+
+        try:
+            raw_menus = replaced_raw_menu.replace(" Nica ", " nica ")
+            raw_menus = replaced_raw_menu.replace(" BBQ ", " bbq ") 
+            
+            return(raw_menus)
+        except:
+            print("Problem when finding special words for lower case conversion")        
+
+            
     def loncek_get_raw_menus(self, url):
         """Load Loncek Kuhaj page
         """
@@ -666,20 +702,21 @@ class MenuParsers:
         """Calculate first or last Monday for Josko
         """
 
-        work_day = menu_date.weekday() + 1
+        work_day = menu_date.weekday() 
 
-        if work_day > 5:
-            work_day = 1
+        #if work_day > 5:
+        #    work_day = 1
 
         # Select first next or last monday
-        if work_day > 5:
+        if work_day > 4:
+            work_day = 0
             monday = menu_date + datetime.timedelta(days=-menu_date.weekday(), weeks=1)
         else:
             monday = menu_date - datetime.timedelta(days=menu_date.weekday())
             
         date = str("{:02d}".format(monday.day))+str("{:02d}".format(monday.month))+str(monday.year)
         
-        return(date)
+        return(date, work_day)
 
     def get_month_as_string(self, month : int) -> str:
         """Get the three letter representation of the specified month.
@@ -705,7 +742,7 @@ if __name__ == "__main__":
 
     # Get date
     date = datetime.date.today()
-
+    
     ddv_menu = parsers.dijaski_dom_vic(date)
     print("DDV: "+str(ddv_menu))
 
@@ -732,6 +769,6 @@ if __name__ == "__main__":
 
     kondor_menu = parsers.kondor(date)
     print("Kondor: "+str(kondor_menu))
-
+    
     ijs_menu = parsers.marende_dulcis_ijs(date)
     print("IJS "+str(ijs_menu))
