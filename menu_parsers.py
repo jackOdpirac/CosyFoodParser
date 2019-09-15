@@ -147,7 +147,7 @@ class MenuParsers:
         """Get food for Barjan
         """
 
-        date = "{}.{}".format(menu_date, menu_date)
+        date = str(menu_date.day)+"."+str(menu_date.month)
 
         url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
 
