@@ -457,6 +457,24 @@ class MenuParsers:
         return(all_menus)
 
 
+    def hombre(self, menu_date : datetime.date):
+        """Get food for Kondor
+        """
+
+        webpage = "https://www.studentska-prehrana.si/restaurant/Details/1403#"
+
+        # Open desired site with the date
+        raw_page_tree = self.open_target_page(webpage)
+
+        # Get all of the menus for today
+        complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
+        
+        # Chop menus after found 4
+        all_menus = complete_menus[32:]
+
+        return(all_menus)
+    
+    
     def interspar_vic(self, menu_date : datetime.date):
         """Get food for Interspar Vic
         """
@@ -569,72 +587,63 @@ class MenuParsers:
         except:
             print("Problem getting menus from viaBona website.")
 
-
+            
     def loncek_kuhaj(self, menu_date : datetime.date):
         """Get food for Loncek Kuhaj
         """
-        work_day = menu_date.weekday() + 1
-
-        if work_day > 5:
-            work_day = 1
-        date = work_day - 1
-
-        url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
-
-        # Get raw menus 
-        raw_menus = self.loncek_get_raw_menus(url)
-
-        # Remove all of the prices
-        raw_menus = re.sub("(\n[0-9]+,[0-9]+ €)"," ", raw_menus)
-
-        # Remove annoying DNEVNA JUHA and following juha/minestra/whatever
-        raw_menus = re.sub("(\nDNEVNA JUHA\n.*?\n)"," ", raw_menus)
-
-        # Remove all the dates
-        raw_menus = re.sub("([0-9]+. [0-9]+. [0-9]+)"," ", raw_menus)
-
-        # Remove all multiple spaces
-        raw_menus = re.sub(" +", " ", raw_menus)
-
-        # Split raw menu through days
-        splited_raw_menus = re.split(r"Ponedeljek, |Torek, |Sreda, |Četrtek, |Petek, ", raw_menus)
-
-        # Skip everything prior Ponedeljek
-        splited_raw_menus = splited_raw_menus[1:]
-
-        # Split every day menu by "Dnevna juha, "
-        full_week_menu = []
-        for i in range(0,5):
-            day_menu = re.split(r"Dnevna juha, ", splited_raw_menus[i])
-            # Splitting defect,self,  ignore
-            day_menu = day_menu[1:]
-            full_week_menu.append(day_menu)
-
-        # Capitalize and remove "\n"
-        all_menus = []
-        for i in range(len(full_week_menu)):
-            daily_menu = []
-            for j in full_week_menu[i]:
-                daily_menu.append(j.capitalize().replace("\n",""))
-            all_menus.append(daily_menu)
-
-        #final menus
-        return(all_menus[date])
-    
-            
-    def loncek_get_raw_menus(self, url):
-        """Load Loncek Kuhaj page
-        """
+        
+        date = menu_date.weekday() + 1
 
         try:
-            # Load webpage
-            webpage = self.browser.get('https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php')
-            
-            raw_menus = self.browser.find_element_by_xpath("//*[@id='pm_layout_wrapper']/div[3]/div[1]").text
-            
-            return(raw_menus)
+            # Only for work days
+            if date < 6:
+                
+                url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
+                
+
+                hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+                       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                       'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+                       'Accept-Encoding': 'none',
+                       'Accept-Language': 'en-US,en;q=0.8',
+                       'Connection': 'keep-alive'}
+
+                # Open page
+                page = requests.get(url, headers = hdr)
+                page_tree = html.fromstring(page.content)
+                raw_table = page_tree.xpath("//*[@id='pm_layout_wrapper']/div[3]/div[1]//text()")
+
+                # Join into a single string
+                raw_menus ="".join(raw_table)
+
+                # Remove all the crap, numbers, double spaces and annoying Dnevna and following juha/minestra/whatever until ','
+                raw_menus = re.sub("(Dnevna .*?,)"," ", raw_menus)
+                raw_menus = re.sub("\t"," ", raw_menus)
+                raw_menus = re.sub("\r"," ", raw_menus)
+                raw_menus = re.sub("\n"," ", raw_menus)
+                raw_menus = re.sub("([0-9]+,[0-9]+)"," ", raw_menus)
+                raw_menus = re.sub(" +", " ", raw_menus)
+
+                # Split raw menu through days
+                splited_raw_menus = re.split(r"Ponedeljek, |Torek, |Sreda, |Četrtek, |Petek, ", raw_menus)
+
+                # Select menu only for specific day and split according to "€"
+                day_menu = re.split(r"€ ", splited_raw_menus[date])
+
+                # Clip first element
+                day_menu = day_menu[1:]
+
+                all_menus = []
+
+                # Capitalize each menu
+                for i in range(0, len(day_menu)):
+                    all_menus.append(day_menu[i].capitalize())
+
+                return(all_menus)
+            else:
+                print("Loncek kuhaj doesn't serves during weekends.")
         except:
-            print("Problem opening Loncek Kuhaj url")
+            print("Problem getting menus from Loncek Kuhaj website.")
             
             
 if __name__ == "__main__":
@@ -643,34 +652,36 @@ if __name__ == "__main__":
     # Get date
     date = datetime.date.today()
 
-    kurji_tat_menu = parsers.kurji_tat(date)
-    print("KurjiTat: "+str(kurji_tat_menu))
-
-    ddv_menu = parsers.dijaski_dom_vic(date)
-    print("DDV: "+str(ddv_menu))
-    
-    marjetica_menu = parsers.marjetica_tobacna(date)
-    print("Marjetice: "+str(marjetica_menu))
-
-    fe_menza_menu = parsers.delicije_fe(date)
-    print("MenzaFe: "+str(fe_menza_menu))    
-    
-    kondor_menu = parsers.kondor(date)
-    print("Kondor: "+str(kondor_menu))
-    
-    interspar_vic_menu = parsers.interspar_vic(date)
-    print("SparVic: "+str(interspar_vic_menu))
-    
-    ijs_menu = parsers.marende_dulcis_ijs(date)
-    print("IJS "+str(ijs_menu))    
-    
     barjan_menu = parsers.barjan(date)
     print("Barjan: "+str(barjan_menu))
     
     via_bona_menu = parsers.via_bona(date)
     print("ViaBona: "+str(via_bona_menu))
-    
-    """    
+
+    ijs_menu = parsers.marende_dulcis_ijs(date)
+    print("IJS "+str(ijs_menu)) 
+
+    marjetica_menu = parsers.marjetica_tobacna(date)
+    print("Marjetice: "+str(marjetica_menu))
+
+    interspar_vic_menu = parsers.interspar_vic(date)
+    print("SparVic: "+str(interspar_vic_menu))
+
     loncek_kuhaj_menu = parsers.loncek_kuhaj(date)
     print("LoncekKuhaj: "+str(loncek_kuhaj_menu))
-    """
+    
+    kurji_tat_menu = parsers.kurji_tat(date)
+    print("KurjiTat: "+str(kurji_tat_menu))
+    
+    fe_menza_menu = parsers.delicije_fe(date)
+    print("MenzaFe: "+str(fe_menza_menu))    
+    
+    kondor_menu = parsers.kondor(date)
+    print("Kondor: "+str(kondor_menu))
+
+    ddv_menu = parsers.dijaski_dom_vic(date)
+    print("DDV: "+str(ddv_menu))
+    
+    hombre_menu = parsers.hombre(date)
+    print("Hombre: "+str(hombre_menu))
+
