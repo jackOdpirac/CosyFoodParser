@@ -1,6 +1,3 @@
-#from selenium import webdriver
-#from selenium.webdriver.common.by import By
-#from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import datetime
 import re
 import os
@@ -9,8 +6,6 @@ from urllib.request import urlopen
 from time import sleep
 import time
 import fitz
-
-from bs4 import BeautifulSoup
 from lxml import html
 import requests
 
