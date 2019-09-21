@@ -1,6 +1,6 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+#from selenium import webdriver
+#from selenium.webdriver.common.by import By
+#from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import datetime
 import re
 import os
@@ -15,6 +15,7 @@ from lxml import html
 import requests
 
 class MenuParsers:
+    """
     def __init__(self):
         # If the variable is set, Selenium will attempt to
         # connect to a remote Chromedriver.
@@ -28,7 +29,7 @@ class MenuParsers:
             prefs = {"profile.managed_default_content_settings.images": 2}
             chromeOptions.add_experimental_option("prefs", prefs)
             self.browser = webdriver.Chrome(chrome_options=chromeOptions)
-
+    """
     def __del__(self):
         self.browser.close()
 
@@ -39,43 +40,51 @@ class MenuParsers:
 
         date = str(menu_date.day)+"."+str(menu_date.month)
         
+        # Find current day of the week
+        workday = menu_date.weekday() + 1
+        
         url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
 
-        # Load Barjan FB page 
-        request  = urllib.request.Request(url)
-        response = urllib.request.urlopen(request)
-        raw_html = response.read().decode('utf-8')
+        # Only for workdays
+        if workday < 6:
+        
+            # Load Barjan FB page 
+            request  = urllib.request.Request(url)
+            response = urllib.request.urlopen(request)
+            raw_html = response.read().decode('utf-8')
 
-        # Start and stop strings
-        start_location = date
-        end_location   = "</span></p><span class=\"text_exposed_hide\">"
+            # Start and stop strings
+            start_location = date
+            end_location   = "</span></p><span class=\"text_exposed_hide\">"
 
-        # Find start and stop
-        raw_menu_start = raw_html.find(date)
-        raw_menu_stop  = raw_html.find(end_location, raw_menu_start)
+            # Find start and stop
+            raw_menu_start = raw_html.find(date)
+            raw_menu_stop  = raw_html.find(end_location, raw_menu_start)
 
-        # Actual raw menus
-        raw_menus = raw_html[raw_menu_start:raw_menu_stop]
+            # Actual raw menus
+            raw_menus = raw_html[raw_menu_start:raw_menu_stop]
 
-        # Remove all tags and all the other crap
-        clean_menus = re.sub('<[^>]+>', '', raw_menus)
-        clean_menus = clean_menus.replace("...","")
-        clean_menus = clean_menus.replace(date, "")
+            # Remove all tags and all the other crap
+            clean_menus = re.sub('<[^>]+>', '', raw_menus)
+            clean_menus = clean_menus.replace("...","")
+            clean_menus = clean_menus.replace(date, "")
 
-        # Create a nicer list of menus 
-        nicer_list = clean_menus.split("-")
+            # Create a nicer list of menus 
+            nicer_list = clean_menus.split("-")
 
-        # Skip souppe of the day 
-        nicer_list = nicer_list[1:] 
+            # Skip souppe of the day 
+            nicer_list = nicer_list[1:] 
 
-        # Capitalize and create final menus
-        all_menus = []
-        for i in range(len(nicer_list)):
-            temp_menu = nicer_list[i].capitalize()
-            all_menus.append(temp_menu)
+            # Capitalize and create final menus
+            all_menus = []
+            for i in range(len(nicer_list)):
+                temp_menu = nicer_list[i].capitalize()
+                all_menus.append(temp_menu)
 
-        return(all_menus)
-
+            return(all_menus)
+        else:
+            print("Barjan doesn't serve during weekends.") 
+            
     
     def marende_dulcis_ijs(self, menu_date : datetime.date):
         """Get food for Marende Dulcis IJS
@@ -84,55 +93,60 @@ class MenuParsers:
         date, day_of_week = self.get_ijs_date(menu_date)
         
         url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
+   
+        # Only for workdays
+        if day_of_week < 6:
+            
+            # Download PDF
+            pdf_name = "ijs"+date
+            self.pdf_download_from_url(pdf_name, url)
 
-        # Download PDF
-        pdf_name = "ijs"+date
-        self.pdf_download_from_url(pdf_name, url)
+            # Open and parse stored PDF
+            raw = fitz.Document(pdf_name + ".pdf")
+            raw_pdf = raw.loadPage(0)
+            raw_text = raw_pdf.getText("type")
 
-        # Open and parse stored PDF
-        raw = fitz.Document(pdf_name + ".pdf")
-        raw_pdf = raw.loadPage(0)
-        raw_text = raw_pdf.getText("type")
-        
-        # Remove excessive content
-        search_start_string = "@dulcis-gourmet.si. "
-        slo_start_location = raw_text.find(search_start_string)
-        
-        # Crop all that is not actual menu 
-        raw_menus = raw_text[slo_start_location:]
+            # Remove excessive content
+            search_start_string = "@dulcis-gourmet.si. "
+            slo_start_location = raw_text.find(search_start_string)
 
-        # Remove new line characters
-        raw_menus = raw_menus.replace("\n","")
+            # Crop all that is not actual menu 
+            raw_menus = raw_text[slo_start_location:]
 
-        # Remove all shady alergene numbers and commas
-        raw_menus = re.sub("([0-9]+)"," ", raw_menus).replace(" ,", "")
+            # Remove new line characters
+            raw_menus = raw_menus.replace("\n","")
 
-        # Remove all multiple spaces
-        raw_menus = re.sub(" +", " ", raw_menus)
+            # Remove all shady alergene numbers and commas
+            raw_menus = re.sub("([0-9]+)"," ", raw_menus).replace(" ,", "")
 
-        # Take care of a capitalized second words which are not nice for parser
-        raw_menus = self.ijs_convert_special_words_to_lower_case(raw_menus)       
-        
-        # "DODATNA PONUDBA SOLATE" has a higher priority than "DODATNA PONUDBA" for nicer split 
-        main_categories = "JUHA | ENOLONČNICA | MESNA JED | GLAVNA JED S PRILOGO | BREZMESNA JED | DODATNA PONUDBA SOLATE | DODATNA PONUDBA"
+            # Remove all multiple spaces
+            raw_menus = re.sub(" +", " ", raw_menus)
 
-        # Split raw menu depending on main_categories
-        raw_split = re.split(main_categories, raw_menus)
+            # Take care of a capitalized second words which are not nice for parser
+            raw_menus = self.ijs_convert_special_words_to_lower_case(raw_menus)       
 
-        # Get full menu
-        full_week_menu = self.ijs_get_full_menu(raw_split)
+            # "DODATNA PONUDBA SOLATE" has a higher priority than "DODATNA PONUDBA" for nicer split 
+            main_categories = "JUHA | ENOLONČNICA | MESNA JED | GLAVNA JED S PRILOGO | BREZMESNA JED | DODATNA PONUDBA SOLATE | DODATNA PONUDBA"
 
-        # Split "DODATNA PONUDBA" at full_week_menu[5] into to two lists
-        nicer_full_week_menu = full_week_menu[:5] + [full_week_menu[5][::2]] + [full_week_menu[5][1::2]] + full_week_menu[6:]
-        
-        # Create a menu based on a given workday
-        all_menus = [] 
-        for i in range(1,8):
-            menu = nicer_full_week_menu[i][day_of_week]
-            all_menus.append(menu)
+            # Split raw menu depending on main_categories
+            raw_split = re.split(main_categories, raw_menus)
 
-        return(all_menus) 
-    
+            # Get full menu
+            full_week_menu = self.ijs_get_full_menu(raw_split)
+
+            # Split "DODATNA PONUDBA" at full_week_menu[5] into to two lists
+            nicer_full_week_menu = full_week_menu[:5] + [full_week_menu[5][::2]] + [full_week_menu[5][1::2]] + full_week_menu[6:]
+
+            # Create a menu based on a given workday
+            all_menus = [] 
+            for i in range(1,8):
+                menu = nicer_full_week_menu[i][day_of_week]
+                all_menus.append(menu)
+
+            return(all_menus) 
+        else:
+            print("Marende IJS doesn't serve during weekends.")  
+            
 
     def pdf_download_from_url(self, file_name, download_url):
         """Download PDF from given url
@@ -361,7 +375,7 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Kurji Tat doesn't serves during weekends.")    
+            print("Kurji Tat doesn't serve during weekends.")    
 
      
     def dijaski_dom_vic(self, menu_date : datetime.date):
@@ -384,7 +398,7 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Dijaski Dom Vic doesn't serves during weekends.")          
+            print("Dijaski Dom Vic doesn't serve during weekends.")          
   
 
     def marjetica_tobacna(self, menu_date : datetime.date):
@@ -412,7 +426,7 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Marjetica doesn't serves during weekends.") 
+            print("Marjetica doesn't serve during weekends.") 
             
 
     def delicije_fe(self, menu_date : datetime.date):
@@ -435,7 +449,7 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Menza FE doesn't serves during weekends.")    
+            print("Menza FE doesn't serve during weekends.")    
             
 
 
@@ -582,7 +596,7 @@ class MenuParsers:
                 return(all_menus)
             
             else:
-                print("ViaBona doesn't serves during weekends.")
+                print("ViaBona doesn't serve during weekends.")
 
         except:
             print("Problem getting menus from viaBona website.")
@@ -641,7 +655,7 @@ class MenuParsers:
 
                 return(all_menus)
             else:
-                print("Loncek kuhaj doesn't serves during weekends.")
+                print("Loncek kuhaj doesn't serve during weekends.")
         except:
             print("Problem getting menus from Loncek Kuhaj website.")
             
