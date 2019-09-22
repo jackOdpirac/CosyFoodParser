@@ -75,12 +75,17 @@ class MenuParsers:
         if day_of_week < 6:
             
             # Download PDF
-            pdf_name = "ijs"+date
+            pdf_name = "ijs{}.pdf".format(date)
             self.pdf_download_from_url(pdf_name, url)
 
             # Open and parse stored PDF
-            raw = fitz.Document(pdf_name + ".pdf")
+            raw = fitz.Document(pdf_name)
+
             raw_pdf = raw.loadPage(0)
+
+            # Delete pdf
+            os.remove(pdf_name)
+
             raw_text = raw_pdf.getText("type")
 
             # Remove excessive content
@@ -131,12 +136,10 @@ class MenuParsers:
 
         try:
             response = urllib.request.urlopen(download_url)
-            file = open(file_name + ".pdf", 'wb')
-            file.write(response.read())
-            file.close()
+            with open(file_name, 'wb') as file:
+                file.write(response.read())
         except:
             print("Problem while downloading PDF")
-            
 
     def ijs_get_individual_food_locations(self, sub_menu):
         """Get individual menu positions depending on a upper case
