@@ -85,13 +85,13 @@ def get_all_menus() -> List[List[str]]:
         parsers.marjetica_tobacna(today),
         parsers.via_bona(today),
         parsers.loncek_kuhaj(today),
-        # menus.append(parsers.kondor(kondor_date)),
+        # parsers.kondor(today),
         parsers.dijaski_dom_vic(today),
-        # parsers.barjan(today),
+        parsers.barjan(today),
         parsers.delicije_fe(today),
         parsers.kurji_tat(today),
-        parsers.interspar_vic(today)
-        # parsers.marende_dulcis_ijs(date, today)
+        # parsers.interspar_vic(today)
+        parsers.marende_dulcis_ijs(today)
     ]
 
 def get_menu(restaurant : str) -> List[str]:
