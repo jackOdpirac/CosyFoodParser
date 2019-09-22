@@ -59,7 +59,8 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Barjan doesn't serve during weekends.") 
+            print("Barjan doesn't serve during weekends.")
+            return ["Barjan doesn't serve during weekends."] 
             
     
     def marende_dulcis_ijs(self, menu_date : datetime.date):
@@ -121,8 +122,8 @@ class MenuParsers:
 
             return(all_menus) 
         else:
-            print("Marende IJS doesn't serve during weekends.")  
-            
+            print("Marende IJS doesn't serve during weekends.")
+            return ["Marende IJS doesn't serve during weekends."]
 
     def pdf_download_from_url(self, file_name, download_url):
         """Download PDF from given url
@@ -192,7 +193,7 @@ class MenuParsers:
             
             return(raw_menus)
         except:
-            print("Problem when finding special words for lower case conversion")        
+            print("Problem when finding special words for lower case conversion")
             
             
     def get_ijs_date(self, menu_date : datetime.date):
@@ -282,7 +283,7 @@ class MenuParsers:
             print("Problem while scrabbing and parsing menus on studentska prehrana")
 
 
-    def studentska_prehrana_clip_everyday_menus(self, menu, menu_delimiter):        
+    def studentska_prehrana_clip_everyday_menus(self, menu, menu_delimiter):
         """Remove all everyday menus on Studentska prehrana
         """       
         
@@ -351,7 +352,8 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Kurji Tat doesn't serve during weekends.")    
+            print("Kurji Tat doesn't serve during weekends.")
+            return ["Kurji Tat doesn't serve during weekends."]
 
      
     def dijaski_dom_vic(self, menu_date : datetime.date):
@@ -374,7 +376,8 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Dijaski Dom Vic doesn't serve during weekends.")          
+            print("Dijaski Dom Vic doesn't serve during weekends.")
+            return ["Dijaski Dom Vic doesn't serve during weekends."]
   
 
     def marjetica_tobacna(self, menu_date : datetime.date):
@@ -402,7 +405,8 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Marjetica doesn't serve during weekends.") 
+            print("Marjetica doesn't serve during weekends.")
+            return ["Marjetica doesn't serve during weekends."] 
             
 
     def delicije_fe(self, menu_date : datetime.date):
@@ -425,7 +429,8 @@ class MenuParsers:
 
             return(all_menus)
         else:
-            print("Menza FE doesn't serve during weekends.")    
+            print("Menza FE doesn't serve during weekends.")
+            return ["Menza FE doesn't serve during weekends."]
             
 
 
@@ -573,6 +578,7 @@ class MenuParsers:
             
             else:
                 print("ViaBona doesn't serve during weekends.")
+                return ["ViaBona doesn't serve during weekends."]
 
         except:
             print("Problem getting menus from viaBona website.")
@@ -632,6 +638,7 @@ class MenuParsers:
                 return(all_menus)
             else:
                 print("Loncek kuhaj doesn't serve during weekends.")
+                return ["Loncek kuhaj doesn't serve during weekends."]
         except:
             print("Problem getting menus from Loncek Kuhaj website.")
             
@@ -674,4 +681,3 @@ if __name__ == "__main__":
     
     hombre_menu = parsers.hombre(date)
     print("Hombre: "+str(hombre_menu))
-
