@@ -10,25 +10,6 @@ from lxml import html
 import requests
 
 class MenuParsers:
-    """
-    def __init__(self):
-        # If the variable is set, Selenium will attempt to
-        # connect to a remote Chromedriver.
-        host_var = "CHROME_HOST"
-        if host_var in os.environ:
-            url = "http://{}/wd/hub".format(os.environ.get(host_var))
-            self.browser = webdriver.Remote(url, DesiredCapabilities.CHROME)
-        else:
-            # Disable loading of images
-            chromeOptions = webdriver.ChromeOptions()
-            prefs = {"profile.managed_default_content_settings.images": 2}
-            chromeOptions.add_experimental_option("prefs", prefs)
-            self.browser = webdriver.Chrome(chrome_options=chromeOptions)
-    """
-    def __del__(self):
-        self.browser.close()
-
-
     def barjan(self, menu_date : datetime.date):
         """Get food for Barjan
         """
