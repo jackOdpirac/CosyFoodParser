@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import datetime
 from menu_parsers import MenuParsers
 
@@ -20,11 +20,11 @@ def serve():
         return help_menu()
 
     if 'text' not in request.args:
-        json_menu_items = [convert_menu_to_api_element(menu) for menu in get_all_menus()]
+        json_menu_items = [convert_menu_to_api_element(name, menu) for name, menu in get_all_menus()]
     else:
         # Specific restaurant was requested
         restaurant = request.args.get('text')
-        json_menu_items = [convert_menu_to_api_element(get_menu(restaurant))]
+        json_menu_items = [convert_menu_to_api_element(restaurant, get_menu(restaurant))]
 
     response = {'text': 'Here are your lunch menus:',
                 'extra_responses': json_menu_items,
@@ -52,11 +52,14 @@ def help_menu():
     return jsonify({'text': help_text,
                    'response_type': 'in_channel'})
 
-def convert_menu_to_api_element(menu_items: List[str]) -> Dict[str,str]:
+def convert_menu_to_api_element(name : str, menu_items: List[str]) -> Dict[str,str]:
     """Convert a list of menu options to a structure that can be converted into a JSON.
 
     Parameters
     ----------
+    name : str
+        Name of the restaurant
+
     menu_items : List[str]
         List of menu options.
 
@@ -65,33 +68,39 @@ def convert_menu_to_api_element(menu_items: List[str]) -> Dict[str,str]:
     Dict[str,str]
         JSON representation of the menu options.
     """
+
+    menu_text = '## {}\n'.format(name)
     
-    menu_text = '\n'.join(menu_items)
+    try:
+        menu_text += '\n'.join(menu_items)
+    except TypeError:
+        menu_text += "Error reading menu."
 
     return {'text': menu_text, 'response_type': 'in_channel'}
 
-def get_all_menus() -> List[List[str]]:
+def get_all_menus() -> List[Tuple[str, List[str]]]:
     """Get a list of all menus.
 
     Returns
     -------
-    List[List[str]]
-        The first list represents different restaurants. The contained lists contain individual menu items.
+    List[Tuple[str, List[str]]]
+        The first list represents different restaurants. The contained tuple contains
+        a restaurant name and the list of individual menu items.
     """
 
     today = datetime.date.today()
 
     return [
-        parsers.marjetica_tobacna(today),
-        parsers.via_bona(today),
-        parsers.loncek_kuhaj(today),
-        # parsers.kondor(today),
-        parsers.dijaski_dom_vic(today),
-        parsers.barjan(today),
-        parsers.delicije_fe(today),
-        parsers.kurji_tat(today),
-        # parsers.interspar_vic(today)
-        parsers.marende_dulcis_ijs(today)
+        ("Marjetica", parsers.marjetica_tobacna(today)),
+        ("Via bona", parsers.via_bona(today)),
+        ("Loncek kuhaj", parsers.loncek_kuhaj(today)),
+        # ("Kondor", parsers.kondor(today)),
+        ("Dijaski dom Vic", parsers.dijaski_dom_vic(today)),
+        ("Barjan", parsers.barjan(today)),
+        ("Delicije FE", parsers.delicije_fe(today)),
+        ("Kurji tat", parsers.kurji_tat(today)),
+        #("Interspar Vic", parsers.interspar_vic(today)),
+        ("IJS", parsers.marende_dulcis_ijs(today))
     ]
 
 def get_menu(restaurant : str) -> List[str]:
