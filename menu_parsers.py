@@ -79,13 +79,8 @@ class MenuParsers:
             self.pdf_download_from_url(pdf_name, url)
 
             # Open and parse stored PDF
-            raw = fitz.Document(pdf_name)
-
-            raw_pdf = raw.loadPage(0)
-
-            # Delete pdf
-            os.remove(pdf_name)
-
+            raw = fitz.open(pdf_name)
+            raw_pdf = raw.loadPage(0)            
             raw_text = raw_pdf.getText("type")
 
             # Remove excessive content
@@ -124,12 +119,17 @@ class MenuParsers:
             for i in range(1,8):
                 menu = nicer_full_week_menu[i][day_of_week]
                 all_menus.append(menu)
-
+            
+            # Close and delete pdf
+            raw.close()
+            os.remove(pdf_name)
+            
             return(all_menus) 
         else:
             print("Marende IJS doesn't serve during weekends.")
             return ["Marende IJS doesn't serve during weekends."]
 
+        
     def pdf_download_from_url(self, file_name, download_url):
         """Download PDF from given url
         """
@@ -141,6 +141,7 @@ class MenuParsers:
         except:
             print("Problem while downloading PDF")
 
+            
     def ijs_get_individual_food_locations(self, sub_menu):
         """Get individual menu positions depending on a upper case
         """
@@ -192,7 +193,7 @@ class MenuParsers:
 
         try:
             raw_menus = replaced_raw_menu.replace(" Nica ", " nica ")
-            raw_menus = replaced_raw_menu.replace(" BBQ ", " bbq ") 
+            raw_menus = raw_menus.replace(" BBQ ", " bbq ") 
             
             return(raw_menus)
         except:
