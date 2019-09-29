@@ -461,7 +461,7 @@ class MenuParsers:
                 return(all_menus)
         
             except (TypeError, ValueError):
-                return ["Kondor encountered a problem getting and parsing menus"]
+                return ["Kondor encountered a problem while getting and parsing menus"]
             
             except:
                 return("Kondor encountered a random problem")
@@ -609,59 +609,59 @@ class MenuParsers:
         
         date = menu_date.weekday() + 1
 
-        # Only for work days
-        if date < 6:
-            try:
+        try:
+            # Only for work days
+            if date > 5:
+                raise NotImplementedError
+                
+            url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
 
-                url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
+            hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+                   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                   'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+                   'Accept-Encoding': 'none',
+                   'Accept-Language': 'en-US,en;q=0.8',
+                   'Connection': 'keep-alive'}
 
-                hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
-                       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                       'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-                       'Accept-Encoding': 'none',
-                       'Accept-Language': 'en-US,en;q=0.8',
-                       'Connection': 'keep-alive'}
+            # Open page
+            page = requests.get(url, headers = hdr)
+            page_tree = html.fromstring(page.content)
+            raw_table = page_tree.xpath("//*[@id='pm_layout_wrapper']/div[3]/div[1]//text()")
 
-                # Open page
-                page = requests.get(url, headers = hdr)
-                page_tree = html.fromstring(page.content)
-                raw_table = page_tree.xpath("//*[@id='pm_layout_wrapper']/div[3]/div[1]//text()")
+            # Join into a single string
+            raw_menus ="".join(raw_table)
 
-                # Join into a single string
-                raw_menus ="".join(raw_table)
+            # Remove all the crap, numbers, double spaces and annoying Dnevna and following juha/minestra/whatever until ','
+            raw_menus = re.sub("(Dnevna .*?,)"," ", raw_menus)
+            raw_menus = re.sub("\t"," ", raw_menus)
+            raw_menus = re.sub("\r"," ", raw_menus)
+            raw_menus = re.sub("\n"," ", raw_menus)
+            raw_menus = re.sub("([0-9]+,[0-9]+)"," ", raw_menus)
+            raw_menus = re.sub(" +", " ", raw_menus)
 
-                # Remove all the crap, numbers, double spaces and annoying Dnevna and following juha/minestra/whatever until ','
-                raw_menus = re.sub("(Dnevna .*?,)"," ", raw_menus)
-                raw_menus = re.sub("\t"," ", raw_menus)
-                raw_menus = re.sub("\r"," ", raw_menus)
-                raw_menus = re.sub("\n"," ", raw_menus)
-                raw_menus = re.sub("([0-9]+,[0-9]+)"," ", raw_menus)
-                raw_menus = re.sub(" +", " ", raw_menus)
+            # Split raw menu through days
+            splited_raw_menus = re.split(r"Ponedeljek, |Torek, |Sreda, |Četrtek, |Petek, ", raw_menus)
 
-                # Split raw menu through days
-                splited_raw_menus = re.split(r"Ponedeljek, |Torek, |Sreda, |Četrtek, |Petek, ", raw_menus)
+            # Select menu only for specific day and split according to "€"
+            day_menu = re.split(r"€ ", splited_raw_menus[date])
 
-                # Select menu only for specific day and split according to "€"
-                day_menu = re.split(r"€ ", splited_raw_menus[date])
+            # Clip first element
+            day_menu = day_menu[1:]
 
-                # Clip first element
-                day_menu = day_menu[1:]
+            all_menus = []
 
-                all_menus = []
+            # Capitalize each menu
+            for i in range(0, len(day_menu)):
+                all_menus.append(day_menu[i].capitalize())
 
-                # Capitalize each menu
-                for i in range(0, len(day_menu)):
-                    all_menus.append(day_menu[i].capitalize())
+            return(all_menus)
 
-                return(all_menus)
-        
-            except (TypeError, ValueError):
-                return ["Loncek kuhaj encountered a problem getting and parsing menus"]
-            
-            except:
-                return("Loncek kuhaj encountered a random problem")
-        else:
+        except (TypeError, ValueError):
+            return ["Loncek kuhaj encountered a problem while getting and parsing menus"]
+
+        except:
             return("Loncek kuhaj doesn't serve during weekends.")
+
             
             
 if __name__ == "__main__":
