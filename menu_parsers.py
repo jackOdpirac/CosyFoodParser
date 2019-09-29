@@ -138,7 +138,7 @@ class MenuParsers:
             response = urllib.request.urlopen(download_url)
             with open(file_name, 'wb') as file:
                 file.write(response.read())
-        except:
+        except Exception as error:
             print("Problem while downloading PDF")
 
             
@@ -442,19 +442,33 @@ class MenuParsers:
         """Get food for Kondor
         """
 
-        webpage = "https://www.studentska-prehrana.si/restaurant/Details/1413#"
+        date = menu_date.weekday() + 1
 
-        # Open desired site with the date
-        raw_page_tree = self.open_target_page(webpage)
+        # Only for work days
+        if date < 6:
+            try:
+                webpage = "https://www.studentska-prehrana.si/restaurant/Details/1413#"
 
-        # Get all of the menus for today
-        complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
+                # Open desired site with the date
+                raw_page_tree = self.open_target_page(webpage)
+
+                # Get all of the menus for today
+                complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
+
+                # Chop menus after found 4
+                all_menus = complete_menus[:4]
+
+                return(all_menus)
         
-        # Chop menus after found 4
-        all_menus = complete_menus[:4]
-
-        return(all_menus)
-
+            except (TypeError, ValueError):
+                return ["Kondor encountered a problem getting and parsing menus"]
+            
+            except:
+                return("Kondor encountered a random problem")
+        else:
+            return("Kondor doesn't serve during weekends.")
+    
+    
 
     def hombre(self, menu_date : datetime.date):
         """Get food for Kondor
@@ -513,6 +527,7 @@ class MenuParsers:
 
             # Join into a single string
             dish_of_the_week ="".join(raw_table)
+            eh =1/0
 
             # Remove all of the crap and multiple spaces
             dish_of_the_week = re.sub("([0-9]*)","", dish_of_the_week)
@@ -594,12 +609,11 @@ class MenuParsers:
         
         date = menu_date.weekday() + 1
 
-        try:
-            # Only for work days
-            if date < 6:
-                
+        # Only for work days
+        if date < 6:
+            try:
+
                 url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
-                
 
                 hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -640,11 +654,14 @@ class MenuParsers:
                     all_menus.append(day_menu[i].capitalize())
 
                 return(all_menus)
-            else:
-                print("Loncek kuhaj doesn't serve during weekends.")
-                return ["Loncek kuhaj doesn't serve during weekends."]
-        except:
-            print("Problem getting menus from Loncek Kuhaj website.")
+        
+            except (TypeError, ValueError):
+                return ["Loncek kuhaj encountered a problem getting and parsing menus"]
+            
+            except:
+                return("Loncek kuhaj encountered a random problem")
+        else:
+            return("Loncek kuhaj doesn't serve during weekends.")
             
             
 if __name__ == "__main__":
