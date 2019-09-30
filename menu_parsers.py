@@ -69,7 +69,7 @@ class MenuParsers:
             return["Barjan doesn't serve during weekends."]
 
         except:
-            return["Barjan doesn't serve during weekends."]
+            return["Barjan encountered a problem while getting and parsing menus"]
             
 
     def marende_dulcis_ijs(self, menu_date : datetime.date):
