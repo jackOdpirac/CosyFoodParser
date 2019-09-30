@@ -74,7 +74,7 @@ def convert_menu_to_api_element(menu_items: List[str], name : str = None) -> Dic
     try:
         menu_text += '\n'.join(menu_items)
     except TypeError:
-        menu_text += "Error reading menu."
+        menu_text += str(menu_items)
 
     return {'text': menu_text, 'response_type': 'in_channel'}
 
