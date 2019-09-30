@@ -9,21 +9,27 @@ import fitz
 from lxml import html
 import requests
 
+class WeekendErrorMenu(Exception):
+    print("")
+
+    
 class MenuParsers:
     def barjan(self, menu_date : datetime.date):
         """Get food for Barjan
         """
-
+        
         date = str(menu_date.day)+"."+str(menu_date.month)
         
         # Find current day of the week
         workday = menu_date.weekday() + 1
         
-        url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
-
-        # Only for workdays
-        if workday < 6:
-        
+        try:
+            # Only for work days
+            if workday > 5:
+                raise WeekendErrorMenu
+                
+            url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
+     
             # Load Barjan FB page 
             request  = urllib.request.Request(url)
             response = urllib.request.urlopen(request)
@@ -44,9 +50,9 @@ class MenuParsers:
             clean_menus = re.sub('<[^>]+>', '', raw_menus)
             clean_menus = clean_menus.replace("...","")
             clean_menus = clean_menus.replace(date, "")
-
+            
             # Create a nicer list of menus 
-            nicer_list = clean_menus.split("-")
+            nicer_list = clean_menus.split(" -")
 
             # Skip souppe of the day 
             nicer_list = nicer_list[1:] 
@@ -58,21 +64,26 @@ class MenuParsers:
                 all_menus.append(temp_menu)
 
             return(all_menus)
-        else:
-            print("Barjan doesn't serve during weekends.")
-            return ["Barjan doesn't serve during weekends."] 
+
+        except NotImplementedError:
+            return["Barjan doesn't serve during weekends."]
+
+        except:
+            return["Barjan doesn't serve during weekends."]
             
-    
+
     def marende_dulcis_ijs(self, menu_date : datetime.date):
         """Get food for Marende Dulcis IJS
         """
 
         date, day_of_week = self.get_ijs_date(menu_date)
         
-        url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
-   
-        # Only for workdays
-        if day_of_week < 6:
+        try:
+            # Only for work days
+            if day_of_week > 5:
+                raise WeekendErrorMenu
+            
+            url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
             
             # Download PDF
             pdf_name = "ijs{}.pdf".format(date)
@@ -124,90 +135,78 @@ class MenuParsers:
             raw.close()
             os.remove(pdf_name)
             
-            return(all_menus) 
-        else:
-            print("Marende IJS doesn't serve during weekends.")
-            return ["Marende IJS doesn't serve during weekends."]
+            return(all_menus)
+
+        except NotImplementedError:
+            return["Marende IJS doesn't serve during weekends."]
+
+        except:
+            return["Marende IJS encountered a problem while getting and parsing menus"]
 
         
     def pdf_download_from_url(self, file_name, download_url):
         """Download PDF from given url
         """
-
-        try:
-            response = urllib.request.urlopen(download_url)
-            with open(file_name, 'wb') as file:
-                file.write(response.read())
-        except Exception as error:
-            print("Problem while downloading PDF")
+        
+        response = urllib.request.urlopen(download_url)
+        with open(file_name, 'wb') as file:
+            file.write(response.read())
 
             
     def ijs_get_individual_food_locations(self, sub_menu):
         """Get individual menu positions depending on a upper case
         """
 
-        try:
-            slo_upper_alphabet = ["A","B","C","Č","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","Š","T","U","V","Z","Ž"]
-            slo_lower_alphabet = ["a","b","c","č","d","e","f","g","h","i","j","k","l","m","n","o","p","r","s","š","t","u","v","z","ž",]
-            all_positions = []
-            # Cycle trough all of a sub_menu
-            for i in range(0, len(sub_menu)):
-                for j in range(0, len(slo_upper_alphabet)):
-                    if sub_menu[i] == slo_upper_alphabet[j]:
-                        all_positions.append(i)
+        slo_upper_alphabet = ["A","B","C","Č","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","Š","T","U","V","Z","Ž"]
+        slo_lower_alphabet = ["a","b","c","č","d","e","f","g","h","i","j","k","l","m","n","o","p","r","s","š","t","u","v","z","ž",]
+        all_positions = []
+        # Cycle trough all of a sub_menu
+        for i in range(0, len(sub_menu)):
+            for j in range(0, len(slo_upper_alphabet)):
+                if sub_menu[i] == slo_upper_alphabet[j]:
+                    all_positions.append(i)
 
-            # Add last list's last index
-            all_positions.append(len(sub_menu))
+        # Add last list's last index
+        all_positions.append(len(sub_menu))
 
-            return(all_positions)
-        except:
-            print("Something went wrong while searching for the menus positions")
+        return(all_positions)
 
             
     def ijs_get_full_menu(self, divided_raw_menu):
         """Get a complete, parsed weekly menu
         """
 
-        try:
-            full_menu = []
-            # Cycle through all main the categories
-            for i in range(1, len(divided_raw_menu)):
-                all_positions = self.ijs_get_individual_food_locations(divided_raw_menu[i])
+        full_menu = []
+        # Cycle through all main the categories
+        for i in range(1, len(divided_raw_menu)):
+            all_positions = self.ijs_get_individual_food_locations(divided_raw_menu[i])
 
-                # Cycle through all dishes inside a category
-                sub_menus = []
-                for j in range(0, len(all_positions)-1):
-                    temp = divided_raw_menu[i][ all_positions[j] : all_positions[j+1] ]
-                    sub_menus.append(temp)
+            # Cycle through all dishes inside a category
+            sub_menus = []
+            for j in range(0, len(all_positions)-1):
+                temp = divided_raw_menu[i][ all_positions[j] : all_positions[j+1] ]
+                sub_menus.append(temp)
 
-                # Apend sub_menus to full mentu
-                full_menu.append(sub_menus)
-            return(full_menu)
-        except:
-            print("Something went wrong during parsing")
-            
+            # Apend sub_menus to full mentu
+            full_menu.append(sub_menus)
+        return(full_menu)
+
             
     def ijs_convert_special_words_to_lower_case(self, replaced_raw_menu):
         """Convert words to lower case that would otherwise cause havoc
         """
 
-        try:
-            raw_menus = replaced_raw_menu.replace(" Nica ", " nica ")
-            raw_menus = raw_menus.replace(" BBQ ", " bbq ") 
-            
-            return(raw_menus)
-        except:
-            print("Problem when finding special words for lower case conversion")
-            
+        raw_menus = replaced_raw_menu.replace(" Nica ", " nica ")
+        raw_menus = raw_menus.replace(" BBQ ", " bbq ") 
+
+        return(raw_menus)
+
             
     def get_ijs_date(self, menu_date : datetime.date):
         """Calculate first or last Monday for Josko
         """
 
         work_day = menu_date.weekday() 
-
-        #if work_day > 5:
-        #    work_day = 1
 
         # Select first next or last monday
         if work_day > 4:
@@ -244,105 +243,97 @@ class MenuParsers:
     def open_target_page(self, webpage):
         """Load desired page
         """    
-        try:
-            # Load page 
-            page      = requests.get(webpage)
-            page_tree = html.fromstring(page.content)
 
-            return(page_tree)
-        except:
-            print("Problem opening webpage")
+        # Load page 
+        page      = requests.get(webpage)
+        page_tree = html.fromstring(page.content)
+
+        return(page_tree)
 
 
     def studentska_prehrana_all_menus(self, page_tree):
         """Return all available menus in a nice format
         """
-        try:
-            all_menus = []
 
-            # Get all of the todays menus
-            for current_menu in range(1, 42):
-                raw_table = page_tree.xpath("//*[@id='menu-list']/div["+str(current_menu)+"]/div/div/div[1]/h5/strong//text()")
+        all_menus = []
 
-                # Detect last menu, then break
-                if not raw_table:
-                    #print(current_menu-1)
-                    break
-                # 
-                else:
-                    # Join into a string
-                    single_menu = "".join(raw_table)
+        # Get all of the todays menus
+        for current_menu in range(1, 42):
+            raw_table = page_tree.xpath("//*[@id='menu-list']/div["+str(current_menu)+"]/div/div/div[1]/h5/strong//text()")
 
-                    # Remove all the crap and double spaces
-                    single_menu = re.sub("[0-9]+ \xa0  ","", single_menu)
-                    single_menu = re.sub(" +", " ", single_menu)
+            # Detect last menu, then break
+            if not raw_table:
+                #print(current_menu-1)
+                break
+            # 
+            else:
+                # Join into a string
+                single_menu = "".join(raw_table)
 
-                    # Lower case then capitalize
-                    single_menu = single_menu.lower().capitalize()
+                # Remove all the crap and double spaces
+                single_menu = re.sub("[0-9]+ \xa0  ","", single_menu)
+                single_menu = re.sub(" +", " ", single_menu)
 
-                    all_menus.append(single_menu)
+                # Lower case then capitalize
+                single_menu = single_menu.lower().capitalize()
 
-            return(all_menus)
-        except:
-            print("Problem while scrabbing and parsing menus on studentska prehrana")
+                all_menus.append(single_menu)
+
+        return(all_menus)
 
 
     def studentska_prehrana_clip_everyday_menus(self, menu, menu_delimiter):
         """Remove all everyday menus on Studentska prehrana
         """       
         
-        try:
-            # find menu delimiter search string
-            for i in range(0, len(menu)):
-                if menu[i] == menu_delimiter:
-                    menu_stop_location = i
-                    break
+        # find menu delimiter search string
+        for i in range(0, len(menu)):
+            if menu[i] == menu_delimiter:
+                menu_stop_location = i
+                break
 
-            # Chop menus after found menu_delimiter
-            parsed_menu = menu[:menu_stop_location]
+        # Chop menus after found menu_delimiter
+        parsed_menu = menu[:menu_stop_location]
 
-            return(parsed_menu)
-        except:
-            print("Problem finding menu_delimiter")
+        return(parsed_menu)
 
             
     def studentska_prehrana_remove_everyday_menus(self, menu, everyday_menus):        
         """Remove all everyday menus for Studentska prehrana
         """       
-        
-        try:
-            flagged_menus = []
-            cleared_menu = menu
 
-            # Search menu by menu
-            for menu_pos in range(0, len(menu)):
-                for everyday_pos in range(0, len(everyday_menus)):
-                    # Flag each everyday menu
-                    if menu[menu_pos] == everyday_menus[everyday_pos]:
-                        flagged_menus.append(menu_pos)
-                        break
-                        
-            # Remove all everyday menus
-            for i in sorted(flagged_menus, reverse=True):
-                del cleared_menu[i]
+        flagged_menus = []
+        cleared_menu = menu
 
-            return(cleared_menu)
-        except:
-            print("Problem removing everyday_menus")
-            
+        # Search menu by menu
+        for menu_pos in range(0, len(menu)):
+            for everyday_pos in range(0, len(everyday_menus)):
+                # Flag each everyday menu
+                if menu[menu_pos] == everyday_menus[everyday_pos]:
+                    flagged_menus.append(menu_pos)
+                    break
+
+        # Remove all everyday menus
+        for i in sorted(flagged_menus, reverse=True):
+            del cleared_menu[i]
+
+        return(cleared_menu)
+
             
     def kurji_tat(self, menu_date : datetime.date):
         """Get food for Kurji Tat
         """
-        
-        webpage = "https://www.studentska-prehrana.si/restaurant/Details/1429#"
-        
+         
         # Find current day of the week
         date = menu_date.weekday() + 1
 
-        # Only for workdays
-        if date < 6:
-        
+        try:
+            # Only for work days
+            if date > 5:
+                raise WeekendErrorMenu
+                
+            webpage = "https://www.studentska-prehrana.si/restaurant/Details/1429#"
+            
             # Open desired site with the date
             raw_page_tree = self.open_target_page(webpage)
 
@@ -354,24 +345,29 @@ class MenuParsers:
 
             all_menus = self.studentska_prehrana_remove_everyday_menus(complete_menus, everyday_menus)
 
-            return(all_menus)
-        else:
-            print("Kurji Tat doesn't serve during weekends.")
-            return ["Kurji Tat doesn't serve during weekends."]
+            return(all_menus)      
 
-     
+        except NotImplementedError:
+            return["Kurji Tat doesn't serve during weekends."]     
+
+        except:
+            return["Kurji Tat encountered a problem while getting and parsing menus"]
+    
+    
     def dijaski_dom_vic(self, menu_date : datetime.date):
         """Get food for Dijaski Dom Vic
         """
-        
-        webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/1314'
 
         # Find current day of the week
         date = menu_date.weekday() + 1
 
-        # Only for workdays
-        if date < 6:
-        
+        try:
+            # Only for work days
+            if date > 5:
+                raise WeekendErrorMenu
+                
+            webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/1314'
+                
             # Open desired site with the date
             raw_page_tree = self.open_target_page(webpage)
 
@@ -379,23 +375,28 @@ class MenuParsers:
             all_menus = self.studentska_prehrana_all_menus(raw_page_tree)
 
             return(all_menus)
-        else:
-            print("Dijaski Dom Vic doesn't serve during weekends.")
-            return ["Dijaski Dom Vic doesn't serve during weekends."]
-  
+
+        except NotImplementedError:
+            return["Dijaski Dom Vic doesn't serve during weekends."]
+
+        except:
+            return["Dijaski Dom Vic encountered a problem while getting and parsing menus"]
+
 
     def marjetica_tobacna(self, menu_date : datetime.date):
         """Get food for Marjetica
         """
         
-        webpage = "https://www.studentska-prehrana.si/restaurant/Details/1424#"
-        
         # Find current day of the week
         date = menu_date.weekday() + 1
 
-        # Only for workdays
-        if date < 6:
-        
+        try:
+            # Only for work days
+            if date > 5:
+                raise WeekendErrorMenu
+                
+            webpage = "https://www.studentska-prehrana.si/restaurant/Details/1424#"
+                
             # Open desired site with the date
             raw_page_tree = self.open_target_page(webpage)
 
@@ -408,23 +409,28 @@ class MenuParsers:
             all_menus = self.studentska_prehrana_remove_everyday_menus(complete_menus, everyday_menus)
 
             return(all_menus)
-        else:
-            print("Marjetica doesn't serve during weekends.")
-            return ["Marjetica doesn't serve during weekends."] 
-            
 
+        except NotImplementedError:
+            return["Marjetica doesn't serve during weekends."]
+
+        except:
+            return["Marjetica encountered a problem while getting and parsing menus"]
+            
+            
     def delicije_fe(self, menu_date : datetime.date):
         """Get food for Delicije - Fakulteta za Elektrotehniko Menza
         """
 
-        webpage = "https://www.studentska-prehrana.si/restaurant/Details/2521#"
-
         # Find current day of the week
         date = menu_date.weekday() + 1
 
-        # Only for workdays
-        if date < 6:
-        
+        try:
+            # Only for work days
+            if date > 5:
+                raise WeekendErrorMenu
+                
+            webpage = "https://www.studentska-prehrana.si/restaurant/Details/2521#"
+                
             # Open desired site with the date
             raw_page_tree = self.open_target_page(webpage)
 
@@ -432,85 +438,95 @@ class MenuParsers:
             all_menus = self.studentska_prehrana_all_menus(raw_page_tree)
 
             return(all_menus)
-        else:
-            print("Menza FE doesn't serve during weekends.")
-            return ["Menza FE doesn't serve during weekends."]
-            
 
+        except NotImplementedError:
+            return["Menza FE doesn't serve during weekends."]  
+
+        except:
+            return["Menza FE encountered a problem while getting and parsing menus"]
+        
 
     def kondor(self, menu_date : datetime.date):
         """Get food for Kondor
         """
 
+        # Find current day of the week
         date = menu_date.weekday() + 1
 
-        # Only for work days
-        if date < 6:
-            try:
-                webpage = "https://www.studentska-prehrana.si/restaurant/Details/1413#"
+        try:
+            # Only for work days
+            if date > 5:
+                raise WeekendErrorMenu
+                
+            webpage = "https://www.studentska-prehrana.si/restaurant/Details/1413#"
 
-                # Open desired site with the date
-                raw_page_tree = self.open_target_page(webpage)
+            # Open desired site with the date
+            raw_page_tree = self.open_target_page(webpage)
 
-                # Get all of the menus for today
-                complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
+            # Get all of the menus for today
+            complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
 
-                # Chop menus after found 4
-                all_menus = complete_menus[:4]
+            # Chop menus after found 4
+            all_menus = complete_menus[:4]
 
-                return(all_menus)
+            return(all_menus)
+
+        except NotImplementedError:
+            return["Kondor doesn't serve during weekends."]
+
+        except:
+            return["Kondor encountered a problem while getting and parsing menus"]
+
         
-            except (TypeError, ValueError):
-                return ["Kondor encountered a problem while getting and parsing menus"]
-            
-            except:
-                return("Kondor encountered a random problem")
-        else:
-            return("Kondor doesn't serve during weekends.")
-    
-    
-
     def hombre(self, menu_date : datetime.date):
-        """Get food for Kondor
+        """Get food for Hombre
         """
 
-        webpage = "https://www.studentska-prehrana.si/restaurant/Details/1403#"
+        try:   
+            webpage = "https://www.studentska-prehrana.si/restaurant/Details/1403#"
 
-        # Open desired site with the date
-        raw_page_tree = self.open_target_page(webpage)
+            # Open desired site with the date
+            raw_page_tree = self.open_target_page(webpage)
 
-        # Get all of the menus for today
-        complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
-        
-        # Chop menus after found 4
-        all_menus = complete_menus[32:]
+            # Get all of the menus for today
+            complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
 
-        return(all_menus)
-    
-    
+            # Chop menus after found 4
+            all_menus = complete_menus[32:]
+
+            return(all_menus)
+
+        except:
+            return["Hombre encountered a problem while getting and parsing menus"]
+
+
     def interspar_vic(self, menu_date : datetime.date):
         """Get food for Interspar Vic
         """
-        
-        webpage = "https://www.studentska-prehrana.si/restaurant/Details/1370#"
 
-        # Open desired site with the date
-        raw_page_tree = self.open_target_page(webpage)
+        try: 
+            webpage = "https://www.studentska-prehrana.si/restaurant/Details/1370#"
 
-        # Get all of the menus for today
-        complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
-        
-        # Clip everyday menus
-        menu_delimiter = "Dunajski puranji zrezek, priloga"
-        all_menus = self.studentska_prehrana_clip_everyday_menus(complete_menus, menu_delimiter)
+            # Open desired site with the date
+            raw_page_tree = self.open_target_page(webpage)
 
-        # Add dish of the week to the end
-        dish_of_the_week = self.spar_get_dish_of_the_week()
+            # Get all of the menus for today
+            complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
 
-        all_menus.append(dish_of_the_week)
-        
-        return(all_menus)
-    
+            # Clip everyday menus
+            menu_delimiter = "Dunajski puranji zrezek, priloga"
+            all_menus = self.studentska_prehrana_clip_everyday_menus(complete_menus, menu_delimiter)
+
+            # Add dish of the week to the end
+            dish_of_the_week = self.spar_get_dish_of_the_week()
+
+            all_menus.append(dish_of_the_week)
+
+            return(all_menus)
+
+        except:
+            return["Spar Vic encountered a problem while getting and parsing menus"]
+            
             
     def spar_get_dish_of_the_week(self):
         """Get Spar dish of the week 
@@ -527,7 +543,6 @@ class MenuParsers:
 
             # Join into a single string
             dish_of_the_week ="".join(raw_table)
-            eh =1/0
 
             # Remove all of the crap and multiple spaces
             dish_of_the_week = re.sub("([0-9]*)","", dish_of_the_week)
@@ -549,70 +564,72 @@ class MenuParsers:
         """Get food for Via Bona
         """
         
-        date = menu_date.weekday() + 1
-
-        try:
-            # Only for work days
-            if date < 6:
-                
-                url = "https://www.via-bona.com/sl/ponudba-hrane/malice-in-kosila/"
-                
-                # Open page
-                page = requests.get(url)
-                page_tree = html.fromstring(page.content)
-                raw_table = page_tree.xpath("/html/body/div[5]/div/div/div[2]/div[2]/div/table["+str(date)+"]/tbody/tr[2]/td//text()")
-
-                # Join into a single string
-                raw_table_menu ="".join(raw_table)
-
-                # Remove all the crap, prices, double spaces,... 
-                raw_table_menu = re.sub("\xa0"," ", raw_table_menu)
-                raw_table_menu = re.sub("([0-9]+,[0-9]+ €)"," ", raw_table_menu)
-                raw_table_menu = re.sub(", SOLATA", "", raw_table_menu)
-                raw_table_menu = re.sub(" +", " ", raw_table_menu)
-
-                # Split words
-                menu_split_words = ["NA ŽLICO [0-9] - ", "MALICA [0-9] - ", "VEGE MALICA - ", "SLADICA - "]
-
-                split_location = []
-
-                # Get all inital menu location from keywords in menu_start_words
-                for search_keyword in range(len(menu_split_words)):
-                    split_location.append([ (i.start(), i.end()) for i in re.finditer(menu_split_words[search_keyword], raw_table_menu)])
-
-                # Unwrap list
-                split_location = sum(split_location, [])
-
-                all_menus = []
-                # Find and parse single menus and then append them into all_menus
-                for i in range(len(split_location)-1):
-                    single_menu = raw_table_menu[split_location[i][1]:split_location[i+1][0]] 
-
-                    # Lower case then capitalize
-                    single_menu = single_menu.lower().capitalize()
-
-                    all_menus.append(single_menu)
-
-                return(all_menus)
-            
-            else:
-                print("ViaBona doesn't serve during weekends.")
-                return ["ViaBona doesn't serve during weekends."]
-
-        except:
-            print("Problem getting menus from viaBona website.")
-
-            
-    def loncek_kuhaj(self, menu_date : datetime.date):
-        """Get food for Loncek Kuhaj
-        """
-        
+        # Find current day of the week
         date = menu_date.weekday() + 1
 
         try:
             # Only for work days
             if date > 5:
-                raise NotImplementedError
+                raise WeekendErrorMenu
+    
+            url = "https://www.via-bona.com/sl/ponudba-hrane/malice-in-kosila/"
+
+            # Open page
+            page = requests.get(url)
+            page_tree = html.fromstring(page.content)
+            raw_table = page_tree.xpath("/html/body/div[5]/div/div/div[2]/div[2]/div/table["+str(date)+"]/tbody/tr[2]/td//text()")
+
+            # Join into a single string
+            raw_table_menu ="".join(raw_table)
+
+            # Remove all the crap, prices, double spaces,... 
+            raw_table_menu = re.sub("\xa0"," ", raw_table_menu)
+            raw_table_menu = re.sub("([0-9]+,[0-9]+ €)"," ", raw_table_menu)
+            raw_table_menu = re.sub(", SOLATA", "", raw_table_menu)
+            raw_table_menu = re.sub(" +", " ", raw_table_menu)
+
+            # Split words
+            menu_split_words = ["NA ŽLICO [0-9] - ", "MALICA [0-9] - ", "VEGE MALICA - ", "SLADICA - "]
+
+            split_location = []
+
+            # Get all inital menu location from keywords in menu_start_words
+            for search_keyword in range(len(menu_split_words)):
+                split_location.append([ (i.start(), i.end()) for i in re.finditer(menu_split_words[search_keyword], raw_table_menu)])
+
+            # Unwrap list
+            split_location = sum(split_location, [])
+
+            all_menus = []
+            # Find and parse single menus and then append them into all_menus
+            for i in range(len(split_location)-1):
+                single_menu = raw_table_menu[split_location[i][1]:split_location[i+1][0]] 
+
+                # Lower case then capitalize
+                single_menu = single_menu.lower().capitalize()
+
+                all_menus.append(single_menu)
+
+            return(all_menus)
+
+        except NotImplementedError:
+            return["ViaBona doesn't serve during weekends."]   
+
+        except:
+            return["ViaBona encountered a problem while getting and parsing menus"]
+            
+            
+    def loncek_kuhaj(self, menu_date : datetime.date):
+        """Get food for Loncek Kuhaj
+        """
+        
+        # Find current day of the week
+        date = menu_date.weekday() + 1
+
+        try:
+            # Only for work days
+            if date > 5:
+                raise WeekendErrorMenu
                 
             url = "https://www.loncek-kuhaj.si/tedenski-jedilnik-tp.php"
 
@@ -656,12 +673,11 @@ class MenuParsers:
 
             return(all_menus)
 
-        except (TypeError, ValueError):
-            return ["Loncek kuhaj encountered a problem while getting and parsing menus"]
+        except NotImplementedError:
+            return["Loncek Kuhaj doesn't serve during weekends."]
 
         except:
-            return("Loncek kuhaj doesn't serve during weekends.")
-
+            return["Loncek Kuhaj encountered a problem while getting and parsing menus"]
             
             
 if __name__ == "__main__":
