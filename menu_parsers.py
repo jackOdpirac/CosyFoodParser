@@ -12,7 +12,7 @@ import requests
 class WeekendErrorMenu(Exception):
     print("")
 
-    
+
 class MenuParsers:
     def barjan(self, menu_date : datetime.date):
         """Get food for Barjan
@@ -65,11 +65,11 @@ class MenuParsers:
 
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Barjan doesn't serve during weekends."]
 
         except:
-            return["Barjan encountered a problem while getting and parsing menus"]
+            return["Barjan doesn't serve during weekends."]
             
 
     def marende_dulcis_ijs(self, menu_date : datetime.date):
@@ -137,7 +137,7 @@ class MenuParsers:
             
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Marende IJS doesn't serve during weekends."]
 
         except:
@@ -147,60 +147,72 @@ class MenuParsers:
     def pdf_download_from_url(self, file_name, download_url):
         """Download PDF from given url
         """
-        
-        response = urllib.request.urlopen(download_url)
-        with open(file_name, 'wb') as file:
-            file.write(response.read())
+
+        try:
+            response = urllib.request.urlopen(download_url)
+            with open(file_name, 'wb') as file:
+                file.write(response.read())
+        except Exception as error:
+            print("Problem while downloading PDF")
 
             
     def ijs_get_individual_food_locations(self, sub_menu):
         """Get individual menu positions depending on a upper case
         """
 
-        slo_upper_alphabet = ["A","B","C","Č","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","Š","T","U","V","Z","Ž"]
-        slo_lower_alphabet = ["a","b","c","č","d","e","f","g","h","i","j","k","l","m","n","o","p","r","s","š","t","u","v","z","ž",]
-        all_positions = []
-        # Cycle trough all of a sub_menu
-        for i in range(0, len(sub_menu)):
-            for j in range(0, len(slo_upper_alphabet)):
-                if sub_menu[i] == slo_upper_alphabet[j]:
-                    all_positions.append(i)
+        try:
+            slo_upper_alphabet = ["A","B","C","Č","D","E","F","G","H","I","J","K","L","M","N","O","P","R","S","Š","T","U","V","Z","Ž"]
+            slo_lower_alphabet = ["a","b","c","č","d","e","f","g","h","i","j","k","l","m","n","o","p","r","s","š","t","u","v","z","ž",]
+            all_positions = []
+            # Cycle trough all of a sub_menu
+            for i in range(0, len(sub_menu)):
+                for j in range(0, len(slo_upper_alphabet)):
+                    if sub_menu[i] == slo_upper_alphabet[j]:
+                        all_positions.append(i)
 
-        # Add last list's last index
-        all_positions.append(len(sub_menu))
+            # Add last list's last index
+            all_positions.append(len(sub_menu))
 
-        return(all_positions)
+            return(all_positions)
+        except:
+            print("Something went wrong while searching for the menus positions")
 
             
     def ijs_get_full_menu(self, divided_raw_menu):
         """Get a complete, parsed weekly menu
         """
 
-        full_menu = []
-        # Cycle through all main the categories
-        for i in range(1, len(divided_raw_menu)):
-            all_positions = self.ijs_get_individual_food_locations(divided_raw_menu[i])
+        try:
+            full_menu = []
+            # Cycle through all main the categories
+            for i in range(1, len(divided_raw_menu)):
+                all_positions = self.ijs_get_individual_food_locations(divided_raw_menu[i])
 
-            # Cycle through all dishes inside a category
-            sub_menus = []
-            for j in range(0, len(all_positions)-1):
-                temp = divided_raw_menu[i][ all_positions[j] : all_positions[j+1] ]
-                sub_menus.append(temp)
+                # Cycle through all dishes inside a category
+                sub_menus = []
+                for j in range(0, len(all_positions)-1):
+                    temp = divided_raw_menu[i][ all_positions[j] : all_positions[j+1] ]
+                    sub_menus.append(temp)
 
-            # Apend sub_menus to full mentu
-            full_menu.append(sub_menus)
-        return(full_menu)
-
+                # Apend sub_menus to full mentu
+                full_menu.append(sub_menus)
+            return(full_menu)
+        except:
+            print("Something went wrong during parsing")
+            
             
     def ijs_convert_special_words_to_lower_case(self, replaced_raw_menu):
         """Convert words to lower case that would otherwise cause havoc
         """
 
-        raw_menus = replaced_raw_menu.replace(" Nica ", " nica ")
-        raw_menus = raw_menus.replace(" BBQ ", " bbq ") 
-
-        return(raw_menus)
-
+        try:
+            raw_menus = replaced_raw_menu.replace(" Nica ", " nica ")
+            raw_menus = raw_menus.replace(" BBQ ", " bbq ") 
+            
+            return(raw_menus)
+        except:
+            print("Problem when finding special words for lower case conversion")
+            
             
     def get_ijs_date(self, menu_date : datetime.date):
         """Calculate first or last Monday for Josko
@@ -243,82 +255,92 @@ class MenuParsers:
     def open_target_page(self, webpage):
         """Load desired page
         """    
+        try:
+            # Load page 
+            page      = requests.get(webpage)
+            page_tree = html.fromstring(page.content)
 
-        # Load page 
-        page      = requests.get(webpage)
-        page_tree = html.fromstring(page.content)
-
-        return(page_tree)
+            return(page_tree)
+        except:
+            print("Problem opening webpage")
 
 
     def studentska_prehrana_all_menus(self, page_tree):
         """Return all available menus in a nice format
         """
+        try:
+            all_menus = []
 
-        all_menus = []
+            # Get all of the todays menus
+            for current_menu in range(1, 42):
+                raw_table = page_tree.xpath("//*[@id='menu-list']/div["+str(current_menu)+"]/div/div/div[1]/h5/strong//text()")
 
-        # Get all of the todays menus
-        for current_menu in range(1, 42):
-            raw_table = page_tree.xpath("//*[@id='menu-list']/div["+str(current_menu)+"]/div/div/div[1]/h5/strong//text()")
+                # Detect last menu, then break
+                if not raw_table:
+                    #print(current_menu-1)
+                    break
+                # 
+                else:
+                    # Join into a string
+                    single_menu = "".join(raw_table)
 
-            # Detect last menu, then break
-            if not raw_table:
-                #print(current_menu-1)
-                break
-            # 
-            else:
-                # Join into a string
-                single_menu = "".join(raw_table)
+                    # Remove all the crap and double spaces
+                    single_menu = re.sub("[0-9]+ \xa0  ","", single_menu)
+                    single_menu = re.sub(" +", " ", single_menu)
 
-                # Remove all the crap and double spaces
-                single_menu = re.sub("[0-9]+ \xa0  ","", single_menu)
-                single_menu = re.sub(" +", " ", single_menu)
+                    # Lower case then capitalize
+                    single_menu = single_menu.lower().capitalize()
 
-                # Lower case then capitalize
-                single_menu = single_menu.lower().capitalize()
+                    all_menus.append(single_menu)
 
-                all_menus.append(single_menu)
-
-        return(all_menus)
+            return(all_menus)
+        except:
+            print("Problem while scrabbing and parsing menus on studentska prehrana")
 
 
     def studentska_prehrana_clip_everyday_menus(self, menu, menu_delimiter):
         """Remove all everyday menus on Studentska prehrana
         """       
         
-        # find menu delimiter search string
-        for i in range(0, len(menu)):
-            if menu[i] == menu_delimiter:
-                menu_stop_location = i
-                break
+        try:
+            # find menu delimiter search string
+            for i in range(0, len(menu)):
+                if menu[i] == menu_delimiter:
+                    menu_stop_location = i
+                    break
 
-        # Chop menus after found menu_delimiter
-        parsed_menu = menu[:menu_stop_location]
+            # Chop menus after found menu_delimiter
+            parsed_menu = menu[:menu_stop_location]
 
-        return(parsed_menu)
+            return(parsed_menu)
+        except:
+            print("Problem finding menu_delimiter")
 
             
     def studentska_prehrana_remove_everyday_menus(self, menu, everyday_menus):        
         """Remove all everyday menus for Studentska prehrana
         """       
+        
+        try:
+            flagged_menus = []
+            cleared_menu = menu
 
-        flagged_menus = []
-        cleared_menu = menu
+            # Search menu by menu
+            for menu_pos in range(0, len(menu)):
+                for everyday_pos in range(0, len(everyday_menus)):
+                    # Flag each everyday menu
+                    if menu[menu_pos] == everyday_menus[everyday_pos]:
+                        flagged_menus.append(menu_pos)
+                        break
+                        
+            # Remove all everyday menus
+            for i in sorted(flagged_menus, reverse=True):
+                del cleared_menu[i]
 
-        # Search menu by menu
-        for menu_pos in range(0, len(menu)):
-            for everyday_pos in range(0, len(everyday_menus)):
-                # Flag each everyday menu
-                if menu[menu_pos] == everyday_menus[everyday_pos]:
-                    flagged_menus.append(menu_pos)
-                    break
-
-        # Remove all everyday menus
-        for i in sorted(flagged_menus, reverse=True):
-            del cleared_menu[i]
-
-        return(cleared_menu)
-
+            return(cleared_menu)
+        except:
+            print("Problem removing everyday_menus")
+            
             
     def kurji_tat(self, menu_date : datetime.date):
         """Get food for Kurji Tat
@@ -347,7 +369,7 @@ class MenuParsers:
 
             return(all_menus)      
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Kurji Tat doesn't serve during weekends."]     
 
         except:
@@ -376,7 +398,7 @@ class MenuParsers:
 
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Dijaski Dom Vic doesn't serve during weekends."]
 
         except:
@@ -410,7 +432,7 @@ class MenuParsers:
 
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Marjetica doesn't serve during weekends."]
 
         except:
@@ -439,7 +461,7 @@ class MenuParsers:
 
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Menza FE doesn't serve during weekends."]  
 
         except:
@@ -471,7 +493,7 @@ class MenuParsers:
 
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Kondor doesn't serve during weekends."]
 
         except:
@@ -612,7 +634,7 @@ class MenuParsers:
 
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["ViaBona doesn't serve during weekends."]   
 
         except:
@@ -673,7 +695,7 @@ class MenuParsers:
 
             return(all_menus)
 
-        except NotImplementedError:
+        except WeekendErrorMenu:
             return["Loncek Kuhaj doesn't serve during weekends."]
 
         except:
