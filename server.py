@@ -20,7 +20,7 @@ def serve():
     if 'text' in request.args and 'help' in request.args.get('text'):
         return help_menu()
 
-    if 'text' not in request.args:
+    if 'text' not in request.args or request.args.get('text') == "":
         json_menu_items = [convert_menu_to_api_element(menu, name) for name, menu in get_all_menus()]
     else:
         # Specific restaurant was requested
