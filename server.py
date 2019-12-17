@@ -48,7 +48,13 @@ def help_menu():
               + "- marjetica\n" \
               + "- viabona\n" \
               + "- loncekkuhaj\n" \
-              + "- kondor"
+              + "- kondor\n" \
+              + "- dd or dijaskidom\n" \
+              + "- barjan\n" \
+              + "- fe\n" \
+              + "- kurjitat\n" \
+              + "- spar\n" \
+              + "- ijs" \
 
     return jsonify({'text': help_text,
                    'response_type': 'in_channel'})
