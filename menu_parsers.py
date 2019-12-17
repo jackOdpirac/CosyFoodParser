@@ -83,7 +83,7 @@ class MenuParsers:
             if day_of_week > 5:
                 raise WeekendErrorMenu
             
-            url  = "https://gourmet.si/wp-content/uploads/2016/02/"+date+".pdf"
+            url  = "https://gourmet.si/wp-content/uploads/2019/12/"+date+".pdf"
             
             # Download PDF
             pdf_name = "ijs{}.pdf".format(date)
