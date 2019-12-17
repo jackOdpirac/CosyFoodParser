@@ -101,12 +101,12 @@ def get_all_menus() -> List[Tuple[str, List[str]]]:
         ("Marjetica", parsers.marjetica_tobacna(today)),
         ("Via bona", parsers.via_bona(today)),
         ("Loncek kuhaj", parsers.loncek_kuhaj(today)),
-        # ("Kondor", parsers.kondor(today)),
+        ("Kondor", parsers.kondor(today)),
         ("Dijaski dom Vic", parsers.dijaski_dom_vic(today)),
         ("Barjan", parsers.barjan(today)),
         ("Delicije FE", parsers.delicije_fe(today)),
         ("Kurji tat", parsers.kurji_tat(today)),
-        #("Interspar Vic", parsers.interspar_vic(today)),
+        ("Interspar Vic", parsers.interspar_vic(today)),
         ("IJS", parsers.marende_dulcis_ijs(today))
     ]
 
