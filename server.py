@@ -42,19 +42,22 @@ def help_menu():
         Response with JSON containing help.
     """
 
-    help_text = "After the /lunch command you can specify a restaurant. " \
+    help_text = "At the end of the /lunch command you can specify a restaurant. " \
               + "If no restaurant is specified, all restaurant menus will be listed.\n" \
               + "The following restaurants are supported:\n" \
-              + "- marjetica\n" \
-              + "- viabona\n" \
-              + "- loncekkuhaj\n" \
-              + "- kondor\n" \
-              + "- dd or dijaskidom\n" \
-              + "- barjan\n" \
-              + "- fe\n" \
-              + "- kurjitat\n" \
-              + "- spar\n" \
-              + "- ijs" \
+              + "- ```marjetica```\n" \
+              + "- ```viabona```\n" \
+              + "- ```loncekkuhaj```\n" \
+              + "- ```kondor```\n" \
+              + "- ```dd``` or ```dijaskidom```\n" \
+              + "- ```barjan```\n" \
+              + "- ```fe```\n" \
+              + "- ```kurjitat```\n" \
+              + "- ```spar```\n" \
+              + "- ```ijs```\n" \
+              + "Example: ```/lunch barjan```\n" \
+              + "\n" \
+              + "You can contribute to the project here: https://github.com/jackOdpirac/CosyFoodParser"
 
     return jsonify({'text': help_text,
                    'response_type': 'in_channel'})
