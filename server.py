@@ -54,7 +54,8 @@ def help_menu():
               + "- fe\n" \
               + "- kurjitat\n" \
               + "- spar\n" \
-              + "- ijs" \
+              + "- ijs\n" \
+              + "- hombre" \
 
     return jsonify({'text': help_text,
                    'response_type': 'in_channel'})
@@ -107,7 +108,8 @@ def get_all_menus() -> List[Tuple[str, List[str]]]:
         ("Delicije FE", parsers.delicije_fe(today)),
         ("Kurji tat", parsers.kurji_tat(today)),
         ("Interspar Vic", parsers.interspar_vic(today)),
-        ("IJS", parsers.marende_dulcis_ijs(today))
+        ("IJS", parsers.marende_dulcis_ijs(today)),
+        ("Hombre", parsers.hombre(today))
     ]
 
 def get_menu(restaurant : str) -> List[str]:
@@ -156,6 +158,9 @@ def get_menu(restaurant : str) -> List[str]:
         
     elif restaurant == "ijs":
         return parsers.marende_dulcis_ijs(date)
+    
+    elif restaurant == "hombre":
+        return parsers.hombre(date)
     
     else:
         return []
