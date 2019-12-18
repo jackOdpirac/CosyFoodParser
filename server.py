@@ -102,7 +102,6 @@ def get_all_menus() -> List[Tuple[str, List[str]]]:
     today = datetime.date.today()
 
     return [
-        ("Hombre", parsers.hombre(today)),
         ("Marjetica", parsers.marjetica_tobacna(today)),
         ("Via bona", parsers.via_bona(today)),
         ("Loncek kuhaj", parsers.loncek_kuhaj(today)),
@@ -165,9 +164,6 @@ def get_menu(restaurant : str) -> List[str]:
         
     elif restaurant == "ijs":
         return parsers.marende_dulcis_ijs(date)
-    
-    elif restaurant == "hombre":
-        return parsers.hombre(date)
     
     else:
         return []
