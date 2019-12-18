@@ -514,7 +514,7 @@ class MenuParsers:
             complete_menus = self.studentska_prehrana_all_menus(raw_page_tree)
 
             # Chop menus before
-            all_menus = complete_menus[30:]
+            all_menus = complete_menus[29:]
 
             return(all_menus)
 
