@@ -21,11 +21,13 @@ def serve():
         return help_menu()
 
     if 'text' not in request.args or request.args.get('text') == "":
+        message = 'Here are your lunch menus:'
         json_menu_items = [convert_menu_to_api_element(menu, name) for name, menu in get_all_menus()]
     else:
         # Specific restaurant was requested
         restaurant = request.args.get('text')
-        json_menu_items = [convert_menu_to_api_element(get_menu(restaurant))]
+        json_menu_items = [convert_menu_to_api_element(get_menu(restaurant), convert_user_command_to_restaurant_name(restaurant))]
+        message = 'Here is the lunch menu for '':'
 
     response = {'text': 'Here are your lunch menus:',
                 'extra_responses': json_menu_items,
@@ -45,6 +47,7 @@ def help_menu():
     help_text = "At the end of the /lunch command you can specify a restaurant. " \
               + "If no restaurant is specified, all restaurant menus will be listed.\n" \
               + "The following restaurants are supported:\n" \
+              + "- ```hombre```\n" \
               + "- ```marjetica```\n" \
               + "- ```viabona```\n" \
               + "- ```loncekkuhaj```\n" \
@@ -101,6 +104,7 @@ def get_all_menus() -> List[Tuple[str, List[str]]]:
     today = datetime.date.today()
 
     return [
+        ("Hombre", parsers.hombre(today)),
         ("Marjetica", parsers.marjetica_tobacna(today)),
         ("Via bona", parsers.via_bona(today)),
         ("Loncek kuhaj", parsers.loncek_kuhaj(today)),
@@ -130,7 +134,10 @@ def get_menu(restaurant : str) -> List[str]:
     # Get date
     date = datetime.date.today()
 
-    if restaurant == "marjetica":
+    if restaurant == "hombre":
+        return parsers.hombre(date)
+
+    elif restaurant == "marjetica":
         return parsers.marjetica_tobacna(date)
 
     elif restaurant == "viabona":
@@ -162,6 +169,43 @@ def get_menu(restaurant : str) -> List[str]:
     
     else:
         return []
+
+def convert_user_command_to_restaurant_name(restaurant: str) -> str:
+    if restaurant == "hombre":
+        return "Hombre"
+
+    elif restaurant == "marjetica":
+        return "Marjetica"
+
+    elif restaurant == "viabona":
+        return "Via bona"
+
+    elif restaurant == "loncekkuhaj":
+        return "Loncek kuhaj"
+
+    elif restaurant == "kondor":
+        return "Kondor"
+
+    elif restaurant == "dd" or restaurant == "dijaskidom":
+        return "Dijaski dom"
+    
+    elif restaurant == "barjan":
+        return "Barjan"
+        
+    elif restaurant == "fe":
+        return "Delicije FE"
+        
+    elif restaurant == "kurjitat":
+        return "Kurji tat"
+        
+    elif restaurant == "spar":
+        return "Spar"
+        
+    elif restaurant == "ijs":
+        return "IJS"
+
+    else:
+        return ""
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
