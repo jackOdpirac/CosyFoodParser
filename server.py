@@ -21,13 +21,11 @@ def serve():
         return help_menu()
 
     if 'text' not in request.args or request.args.get('text') == "":
-        message = 'Here are your lunch menus:'
         json_menu_items = [convert_menu_to_api_element(menu, name) for name, menu in get_all_menus()]
     else:
         # Specific restaurant was requested
         restaurant = request.args.get('text')
         json_menu_items = [convert_menu_to_api_element(get_menu(restaurant), convert_user_command_to_restaurant_name(restaurant))]
-        message = 'Here is the lunch menu for '':'
 
     response = {'text': 'Here are your lunch menus:',
                 'extra_responses': json_menu_items,
