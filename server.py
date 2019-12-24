@@ -27,7 +27,9 @@ def serve():
         restaurant = request.args.get('text')
         json_menu_items = [convert_menu_to_api_element(get_menu(restaurant), convert_user_command_to_restaurant_name(restaurant))]
 
-    response = {'text': 'Here are your lunch menus:',
+    text = "Here are your lunch menus. To learn more about how to use this bot, use the ```/lunch help``` command."
+
+    response = {'text': text,
                 'extra_responses': json_menu_items,
                 'response_type': 'in_channel'}
 
