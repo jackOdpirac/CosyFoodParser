@@ -702,6 +702,64 @@ class MenuParsers:
             return["Loncek Kuhaj encountered a problem while getting and parsing menus"]
             
             
+    def cool_house(self, menu_date : datetime.date):
+        """Get food for Cool House Vic
+        """
+
+        # Find current day of the week and build specific date format
+        weekday = menu_date.weekday() + 1
+
+        date = str(menu_date.day)+"."+str(menu_date.month)+"."+str(menu_date.year)        
+
+        try:
+            # Only for work days
+            if weekday > 5:
+                raise WeekendErrorMenu
+
+            url = "https://coolhouse.si/aktualno/413/dnevna_ponudba_v_nasi_restavraciji_na_vicu/"
+
+            # Open page
+            page = requests.get(url)
+            page_tree = html.fromstring(page.content)
+            raw_table = page_tree.xpath("//*[@id='aktualno_center']/div/div/div[2]/div/div[2]/div[2]/div[2]//text()")
+
+            # Join into a single string
+            raw_table_menu ="".join(raw_table)
+
+            # Start and stop strings
+            start_location = date
+            end_location   = "Oglejte si lokacijo\r\nVabljeni!"
+
+            # Find start and stop
+            raw_menu_start = raw_table_menu.find(date) + len(start_location)+2
+            raw_menu_stop  = raw_table_menu.find(end_location, raw_menu_start)    
+
+            # Actual raw menus
+            raw_menu = raw_table_menu[raw_menu_start:raw_menu_stop]
+            #print(raw_menu)
+
+            # Remove all the crap, prices, double spaces,... 
+            raw_menu = re.sub("\xa0"," ", raw_menu)
+            raw_menu = re.sub("\r\n \r\nNE SPREGLEJTE"," ", raw_menu)
+            raw_menu = re.sub("([0-9]+,[0-9]+ €)"," ", raw_menu)
+            raw_menu = re.sub("\r\n \r\n", "", raw_menu)
+            raw_menu = re.sub(" +", " ", raw_menu)
+            
+            # Split all daily menus
+            nicer_menus = raw_menu.split("\r\n")
+            
+            # Remove soup of the day
+            all_menus = nicer_menus[1:]    
+    
+            return(all_menus)
+
+        except WeekendErrorMenu:
+            return["Cool House doesn't serve during weekends."]
+        
+        except:
+            return["Cool House encountered a problem while getting and parsing menus"]
+        
+        
 if __name__ == "__main__":
     parsers = MenuParsers()
 
@@ -740,3 +798,6 @@ if __name__ == "__main__":
     
     hombre_menu = parsers.hombre(date)
     print("Hombre: "+str(hombre_menu))
+
+    cool_house_menu = parsers.cool_house(date)
+    print("CoolHouse: "+str(cool_house_menu))
