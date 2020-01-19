@@ -58,6 +58,7 @@ def help_menu():
               + "- ```kurjitat```\n" \
               + "- ```spar```\n" \
               + "- ```ijs```\n" \
+              + "- ```coolhouse``` or ```cool```\n" \
               + "Example: ```/lunch barjan```\n" \
               + "\n" \
               + "You can contribute to the project here: https://github.com/jackOdpirac/CosyFoodParser"
@@ -114,6 +115,7 @@ def get_all_menus() -> List[Tuple[str, List[str]]]:
         ("Kurji tat", parsers.kurji_tat(today)),
         ("Interspar Vic", parsers.interspar_vic(today)),
         ("IJS", parsers.marende_dulcis_ijs(today)),
+        ("CoolHouse", parsers.cool_house(today)),
         ("Hombre", parsers.hombre(today))
     ]
 
@@ -167,6 +169,9 @@ def get_menu(restaurant : str) -> List[str]:
     elif restaurant == "ijs":
         return parsers.marende_dulcis_ijs(date)
     
+    elif restaurant == "coolhouse" or restaurant == "cool":
+        return parsers.cool_house(date)
+    
     else:
         return []
 
@@ -203,7 +208,10 @@ def convert_user_command_to_restaurant_name(restaurant: str) -> str:
         
     elif restaurant == "ijs":
         return "IJS"
-
+    
+    elif restaurant == "coolhouse" or restaurant == "cool":
+        return "Cool House Vic"
+    
     else:
         return ""
 
