@@ -731,7 +731,7 @@ class MenuParsers:
             end_location   = "Oglejte si lokacijo\r\nVabljeni!"
 
             # Find start and stop
-            raw_menu_start = raw_table_menu.find(date) + len(start_location)+2
+            raw_menu_start = raw_table_menu.find(date)
             raw_menu_stop  = raw_table_menu.find(end_location, raw_menu_start)    
 
             # Actual raw menus
@@ -741,15 +741,16 @@ class MenuParsers:
             # Remove all the crap, prices, double spaces,... 
             raw_menu = re.sub("\xa0"," ", raw_menu)
             raw_menu = re.sub("\r\n \r\nNE SPREGLEJTE"," ", raw_menu)
-            raw_menu = re.sub("([0-9]+,[0-9]+ €)"," ", raw_menu)
+            raw_menu = re.sub("([0-9]+,[0-9]+)"," ", raw_menu)
+            raw_menu = re.sub("€"," ", raw_menu)
             raw_menu = re.sub("\r\n \r\n", "", raw_menu)
             raw_menu = re.sub(" +", " ", raw_menu)
             
             # Split all daily menus
             nicer_menus = raw_menu.split("\r\n")
             
-            # Remove soup of the day
-            all_menus = nicer_menus[1:]    
+            # Clip inital crap and soup of the day
+            all_menus = nicer_menus[2:]    
     
             return(all_menus)
 
