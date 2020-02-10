@@ -21,17 +21,21 @@ def serve():
         return help_menu()
 
     if 'text' not in request.args or request.args.get('text') == "":
-        json_menu_items = [convert_menu_to_api_element(menu, name) for name, menu in get_all_menus()]
+        json_menu_items = [convert_menu_to_api_element(menu, name, False) for name, menu in get_all_menus()]
+        all_menus = True
     else:
         # Specific restaurant was requested
         restaurant = request.args.get('text')
-        json_menu_items = [convert_menu_to_api_element(get_menu(restaurant), convert_user_command_to_restaurant_name(restaurant))]
+        json_menu_items = [convert_menu_to_api_element(get_menu(restaurant), convert_user_command_to_restaurant_name(restaurant), True)]
+        all_menus = False
 
     text = "Here are your lunch menus. To learn more about how to use this bot, use the ```/lunch help``` command."
 
     response = {'text': text,
-                'extra_responses': json_menu_items,
-                'response_type': 'in_channel'}
+                'extra_responses': json_menu_items}
+
+    if not all_menus:
+        response['response_type'] = 'in_channel'
 
     return jsonify(response)
 
@@ -66,7 +70,7 @@ def help_menu():
     return jsonify({'text': help_text,
                    'response_type': 'in_channel'})
 
-def convert_menu_to_api_element(menu_items: List[str], name : str = None) -> Dict[str,str]:
+def convert_menu_to_api_element(menu_items: List[str], name: str, in_channel: bool) -> Dict[str,str]:
     """Convert a list of menu options to a structure that can be converted into a JSON.
 
     Parameters
@@ -90,7 +94,12 @@ def convert_menu_to_api_element(menu_items: List[str], name : str = None) -> Dic
     except TypeError:
         menu_text += str(menu_items)
 
-    return {'text': menu_text, 'response_type': 'in_channel'}
+    return_value = {'text': menu_text}
+
+    if in_channel:
+        return_value['response_type'] = 'in_channel'
+
+    return return_value
 
 def get_all_menus() -> List[Tuple[str, List[str]]]:
     """Get a list of all menus.
