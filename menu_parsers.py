@@ -788,6 +788,47 @@ class MenuParsers:
 
         except:
             return["Volta encountered a problem while getting and parsing menus"]  
+
+
+    def lepa_vida(self, menu_date : datetime.date):
+        """Get food for Lepa Vida
+        """
+
+        # Find current day of the week and build specific date format
+        weekday = menu_date.weekday() + 1
+
+        date = str(menu_date.day)+"."+str(menu_date.month)+"."+str(menu_date.year)        
+
+        try:
+            # Only for work days
+            if weekday > 5:
+                raise WeekendErrorMenu
+
+            url = "http://okrepcevalnicavida.si/"
+
+            # Open page
+            hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+                   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                   'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+                   'Accept-Encoding': 'none',
+                   'Accept-Language': 'en-US,en;q=0.8',
+                   'Connection': 'keep-alive'}
+
+            # Open page
+            page = requests.get(url, headers = hdr)
+            page_tree = html.fromstring(page.content)
+            raw_table = page_tree.xpath("//*[@id='srm-menu-"+str(526+weekday)+"']//text()")
+
+            # Actual raw menus
+            all_menus = raw_table[2::2]
+
+            print(all_menus)
+
+        except WeekendErrorMenu:
+            return["Lepa Vida doesn't serve during weekends."]
+        
+        except:
+            return["Lepa Vida encountered a problem while getting and parsing menus"]
         
         
 if __name__ == "__main__":
@@ -834,3 +875,6 @@ if __name__ == "__main__":
 
     cool_house_menu = parsers.cool_house(date)
     print("CoolHouse: "+str(cool_house_menu))
+
+    lepa_vida_menu = parsers.lepa_vida(date)
+    print("CoolHouse: "+str(lepa_vida_menu))
