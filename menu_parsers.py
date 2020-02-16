@@ -83,7 +83,7 @@ class MenuParsers:
             if day_of_week > 5:
                 raise WeekendErrorMenu
             
-            url  = "https://gourmet.si/wp-content/uploads/2020/01/"+date+".pdf"
+            url  = "https://gourmet.si/wp-content/uploads/2020/02/"+date+".pdf"
             
             # Download PDF
             pdf_name = "ijs{}.pdf".format(date)
@@ -760,6 +760,35 @@ class MenuParsers:
         except:
             return["Cool House encountered a problem while getting and parsing menus"]
         
+            
+    def volta(self, menu_date : datetime.date):
+        """Get food for Volta
+        """
+
+        # Find current day of the week
+        date = menu_date.weekday() + 1
+
+        try:
+            # Only for work days
+            if date > 5:
+                raise WeekendErrorMenu
+                
+            webpage = 'https://www.studentska-prehrana.si/sl/restaurant/Details/2599'
+                
+            # Open desired site with the date
+            raw_page_tree = self.open_target_page(webpage)
+
+            # Get all of the menus for today
+            all_menus = self.studentska_prehrana_all_menus(raw_page_tree)
+
+            return(all_menus)
+
+        except WeekendErrorMenu:
+            return["Volta doesn't serve during weekends."]
+
+        except:
+            return["Volta encountered a problem while getting and parsing menus"]  
+        
         
 if __name__ == "__main__":
     parsers = MenuParsers()
@@ -784,6 +813,9 @@ if __name__ == "__main__":
 
     loncek_kuhaj_menu = parsers.loncek_kuhaj(date)
     print("LoncekKuhaj: "+str(loncek_kuhaj_menu))
+    
+    volta_menu = parsers.volta(date)
+    print("Volta: "+str(volta_menu))
     
     kurji_tat_menu = parsers.kurji_tat(date)
     print("KurjiTat: "+str(kurji_tat_menu))
