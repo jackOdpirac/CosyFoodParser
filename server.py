@@ -58,6 +58,7 @@ def help_menu():
               + "- ```kondor```\n" \
               + "- ```dd``` or ```dijaskidom```\n" \
               + "- ```barjan```\n" \
+              + "- ```volta```\n" \
               + "- ```fe```\n" \
               + "- ```kurjitat```\n" \
               + "- ```spar```\n" \
@@ -121,6 +122,7 @@ def get_all_menus() -> List[Tuple[str, List[str]]]:
         ("Dijaski dom Vic", parsers.dijaski_dom_vic(today)),
         ("Barjan", parsers.barjan(today)),
         ("Delicije FE", parsers.delicije_fe(today)),
+        ("Volta", parsers.volta(today)),
         ("Kurji tat", parsers.kurji_tat(today)),
         ("Interspar Vic", parsers.interspar_vic(today)),
         ("IJS", parsers.marende_dulcis_ijs(today)),
@@ -181,6 +183,9 @@ def get_menu(restaurant : str) -> List[str]:
     elif restaurant == "coolhouse" or restaurant == "cool":
         return parsers.cool_house(date)
     
+    elif restaurant == "volta":
+        return parsers.volta(date)    
+    
     else:
         return []
 
@@ -220,6 +225,9 @@ def convert_user_command_to_restaurant_name(restaurant: str) -> str:
     
     elif restaurant == "coolhouse" or restaurant == "cool":
         return "Cool House Vic"
+
+    elif restaurant == "volta":
+        return "Volta"
     
     else:
         return ""
