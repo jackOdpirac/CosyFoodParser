@@ -822,7 +822,7 @@ class MenuParsers:
             # Actual raw menus
             all_menus = raw_table[2::2]
 
-            print(all_menus)
+            return(all_menus)
 
         except WeekendErrorMenu:
             return["Lepa Vida doesn't serve during weekends."]
@@ -877,4 +877,4 @@ if __name__ == "__main__":
     print("CoolHouse: "+str(cool_house_menu))
 
     lepa_vida_menu = parsers.lepa_vida(date)
-    print("CoolHouse: "+str(lepa_vida_menu))
+    print("LepaVida: "+str(lepa_vida_menu))
