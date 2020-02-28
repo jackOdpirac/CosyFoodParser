@@ -18,7 +18,7 @@ class MenuParsers:
         """Get food for Barjan
         """
         
-        date = str(menu_date.day)+"."+str(menu_date.month)
+        date = str(menu_date.day)+". "+str(menu_date.month)
         
         # Find current day of the week
         workday = menu_date.weekday() + 1
