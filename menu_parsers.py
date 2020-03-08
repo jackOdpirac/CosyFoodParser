@@ -14,11 +14,13 @@ class WeekendErrorMenu(Exception):
 
 
 class MenuParsers:
+class MenuParsers:
     def barjan(self, menu_date : datetime.date):
         """Get food for Barjan
         """
-        
-        date = str(menu_date.day)+". "+str(menu_date.month)
+
+        date_format_0 = str(menu_date.day)+". "+str(menu_date.month)
+        date_format_1 = str(menu_date.day)+"."+str(menu_date.month)
         
         # Find current day of the week
         workday = menu_date.weekday() + 1
@@ -28,16 +30,23 @@ class MenuParsers:
             if workday > 5:
                 raise WeekendErrorMenu
                 
-            url = "https://www.facebook.com/PIZZERIA-BARJAN-119529851401554/"
+            url = "https://www.facebook.com/pg/PIZZERIA-BARJAN-119529851401554/posts/"
      
             # Load Barjan FB page 
             request  = urllib.request.Request(url)
             response = urllib.request.urlopen(request)
             raw_html = response.read().decode('utf-8')
 
-            # Start and stop strings
-            start_location = date
-            end_location   = "</span></p><span class=\"text_exposed_hide\">"
+            date0 = raw_html.find(date_format_0)
+            date1 = raw_html.find(date_format_1)
+            
+            # Check if date format 0 is valid else use date format 1
+            if date0 > 0:
+                #print("date_format_0")
+                date = date_format_0
+            else:
+                #print("date_format_1")
+                date = date_format_1   
 
             # Find start and stop
             raw_menu_start = raw_html.find(date)
