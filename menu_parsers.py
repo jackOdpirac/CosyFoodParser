@@ -12,8 +12,7 @@ import requests
 class WeekendErrorMenu(Exception):
     print("")
 
-
-class MenuParsers:
+    
 class MenuParsers:
     def barjan(self, menu_date : datetime.date):
         """Get food for Barjan
@@ -48,13 +47,13 @@ class MenuParsers:
                 #print("date_format_1")
                 date = date_format_1   
 
-            # Find start and stop
-            raw_menu_start = raw_html.find(date)
-            raw_menu_stop  = raw_html.find(end_location, raw_menu_start)
-            
             # Start and stop strings
             start_location = date
             end_location   = "</span></p><span class=\"text_exposed_hide\">"
+
+            # Find start and stop
+            raw_menu_start = raw_html.find(start_location)
+            raw_menu_stop  = raw_html.find(end_location, raw_menu_start)
             
             # Actual raw menus
             raw_menus = raw_html[raw_menu_start:raw_menu_stop]
